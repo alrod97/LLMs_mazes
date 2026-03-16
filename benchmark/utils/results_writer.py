@@ -8,6 +8,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+MAX_RAW_TEXT_CHARS = 1_000_000
+
 
 def _slugify(value: str) -> str:
     value = value.strip().lower()
@@ -26,7 +28,7 @@ class RunWriter:
 
     def write_raw_text(self, model_id: str, maze_name: str, raw_text: str) -> Path:
         path = self._target_path(self.raw_text_dir, model_id, maze_name, ".txt")
-        path.write_text(raw_text, encoding="utf-8")
+        path.write_text(_truncate_raw_text(raw_text), encoding="utf-8")
         return path
 
     def write_raw_payload(self, model_id: str, maze_name: str, payload: Any) -> Path:
@@ -69,3 +71,13 @@ class RunWriter:
         model_dir = base_dir / _slugify(model_id)
         model_dir.mkdir(parents=True, exist_ok=True)
         return model_dir / f"{_slugify(maze_name)}{suffix}"
+
+
+def _truncate_raw_text(raw_text: str) -> str:
+    if len(raw_text) <= MAX_RAW_TEXT_CHARS:
+        return raw_text
+    omitted = len(raw_text) - MAX_RAW_TEXT_CHARS
+    return (
+        raw_text[:MAX_RAW_TEXT_CHARS]
+        + f"\n\n[TRUNCATED {omitted} CHARACTERS TO LIMIT DISK USAGE]\n"
+    )

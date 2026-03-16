@@ -894,11 +894,12 @@ tr:last-child td { border-bottom: none; }
      ============================================================ -->
 <nav class="nav-toc" id="toc">
   <a href="#hero" class="toc-link active">Top</a>
+  <a href="#introduction" class="toc-link">Introduction</a>
+  <a href="#methodology" class="toc-link">Methodology</a>
   <a href="#results-visual" class="toc-link">Results</a>
+  <a href="#heatmap" class="toc-link">Heatmap</a>
   <a href="#latency" class="toc-link">Latency</a>
   <a href="#web-ui-case" class="toc-link">Case Study</a>
-  <a href="#methodology" class="toc-link">Methodology</a>
-  <a href="#heatmap" class="toc-link">Heatmap</a>
   <a href="#conclusion" class="toc-link">Conclusion</a>
 </nav>
 
@@ -920,6 +921,96 @@ tr:last-child td { border-bottom: none; }
   </div>
   <div class="hero__figure-note"><strong>How to read this benchmark grid:</strong> The cards are the full dataset. Some mazes are straightforward, some separate the field, and two are unreachable. The score shown on each card is the number of tested models that solved that maze exactly.</div>
 </header>
+
+<!-- ============================================================
+     INTRODUCTION
+     ============================================================ -->
+<section class="section article reveal" id="introduction">
+  <h2 class="heading-2">Introduction</h2>
+  <div class="prose">
+    <p>I use tools like <strong>Claude Code</strong> and <strong>Codex</strong> a lot, and I genuinely like them. Over the last few years it has been hard not to be impressed by how far large language models have come, especially for coding and agentic workflows. But precisely because the systems have become so capable, I keep coming back to the opposite question: <em>where do their limitations still become obvious?</em></p>
+    <p>One reason this question stayed with me is <strong>Yann LeCun&rsquo;s</strong> criticism that current LLMs may still be missing something important about internal world representation. That claim is easy to leave at the level of theory. I wanted a task where the limitation, if it exists, becomes visible immediately rather than remaining philosophical.</p>
+    <p>These mazes are useful for that. For humans, the task is often nearly instantaneous: look at the picture, see whether the treasure is reachable, and, if it is, trace the route. In many cases even a child can do that in seconds. But the model outputs and visible reasoning traces suggest a very different process: transcribe the scene into rows and columns, reconstruct the grid, and then reason over the resulting text-like representation.</p>
+    <p>That is why I find this benchmark interesting. Even when the better models eventually get the answer right, they often need tens of seconds, or more, to get there. To me, that looks less like a pure search problem and more like a <strong>representation learning problem</strong>. The key question is not only whether a model can solve the maze eventually, but whether it can form the kind of fast visual intuition that humans use without effort.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     METHODOLOGY
+     ============================================================ -->
+<section class="section article reveal" id="methodology">
+  <h2 class="heading-2">Methodology</h2>
+  <div class="prose">
+    <p><strong>Dataset:</strong> 10 existing maze images used directly as image inputs. We did not convert them into symbolic matrices, and we did not generate synthetic mazes.</p>
+    <p><strong>Models:</strong> OpenAI GPT-5.4 and GPT-5.1; Anthropic Claude Opus 4.6, Claude Sonnet 4.6, and Claude Haiku 4.5; Google Gemini 3.1 Pro Preview and Gemini 3 Flash; Alibaba Qwen 3.5 Plus and Qwen 3.5 Flash through DashScope.</p>
+    <p><strong>Setup:</strong> every model saw the same image-plus-prompt setup with tools disabled. Movement was restricted to up, down, left, and right. Walls were blocked, walkable tiles were traversable, traps had to be avoided, and the shortest path length was defined as the number of moves rather than the number of visited cells.</p>
+    <p><strong>Scoring:</strong> the benchmark uses one main metric only. A maze counts as solved only if the model gets reachability right and, on reachable mazes, returns an accepted shortest path with the correct length.</p>
+    <p><strong>Run configuration:</strong> OpenAI models were run with reasoning effort set to <code>medium</code>. For a fairer Anthropic comparison, <strong>Claude Opus 4.6</strong> and <strong>Claude Sonnet 4.6</strong> were rerun with adaptive thinking at <code>medium</code>, while <strong>Claude Haiku 4.5</strong> used <code>budget_tokens=4096</code>. Gemini was run with a <code>16384</code> output-token cap, and DashScope Qwen runs used <code>enable_thinking=true</code> with a capped <code>thinking_budget=2048</code> to keep the multimodal calls tractable.</p>
+  </div>
+
+  <details class="prompt-block" id="maze-prompt">
+    <summary>View the exact prompt sent to every model</summary>
+    <pre>You are solving a visual maze puzzle from the image only.
+
+Important rules:
+- Base your answer only on what you can see in the image.
+- Do not use any external tools, code, search, calculators, or graph-search programs.
+- Do not assume anything that is not visually present.
+- Only use 4-directional movement: up, down, left, right.
+- No diagonal moves.
+- Wall tiles are blocked.
+- Walkable tiles can be traversed.
+- Trap tiles, if present, are dangerous and must be avoided; they are not traversable.
+- The start tile is the player character.
+- The goal tile is the treasure.
+- The shortest path length is the number of moves, not the number of visited cells.
+- If the image is ambiguous, say so explicitly instead of guessing.
+
+First visually identify the grid and the special tiles, then solve the maze.
+
+Return the answer in this exact JSON format:
+
+{
+  "grid_size": [rows, cols],
+  "start_found": true_or_false,
+  "goal_found": true_or_false,
+  "reachable": true_or_false,
+  "shortest_path_length": integer_or_null,
+  "path": ["R","D","L","U"] or [],
+  "confidence": "high" | "medium" | "low",
+  "image_ambiguity": "none" | "minor" | "major"
+}
+
+Rules for the JSON:
+- If start or goal cannot be identified with confidence, set confidence to "low".
+- If reachable is false, set "shortest_path_length" to null and "path" to [].
+- If reachable is true, provide one valid shortest path.
+- Output JSON only, with no extra text.</pre>
+  </details>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-label">Dataset</div>
+      <div class="metric-value">10</div>
+      <div class="metric-note">Existing maze images used directly as input.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Models</div>
+      <div class="metric-value">9</div>
+      <div class="metric-note">OpenAI, Anthropic, Google Gemini, and Qwen via DashScope.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Ground Truth</div>
+      <div class="metric-value">8 + 2</div>
+      <div class="metric-note">Eight reachable mazes and two unreachable ones.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Scoring</div>
+      <div class="metric-value">Exact</div>
+      <div class="metric-note">A maze is solved only if the accepted shortest path is recovered.</div>
+    </div>
+  </div>
+</section>
 <!-- ============================================================
      RESULTS: VISUAL SOLVING
      ============================================================ -->
@@ -927,8 +1018,8 @@ tr:last-child td { border-bottom: none; }
   <h2 class="heading-2">Main Results</h2>
   <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
     <p>This benchmark asks one thing only: from the maze image alone, did the model recover the <strong>correct shortest path</strong> to the treasure? A maze counts as solved only if reachability, shortest-path length, and the returned shortest path are all correct.</p>
-    <p>The strongest model in the benchmark was <strong>GPT-5.4</strong>, which solved <strong>9 of 10</strong> mazes exactly. <strong>Gemini 3.1 Pro Preview</strong> was close behind at <strong>8 of 10</strong>. After that, the field drops off sharply.</p>
-    <p>The most striking negative result is the <strong>Claude family</strong>. Claude models are often excellent coding assistants, but on this image-only visual grounding task they were weak: <strong>Claude Sonnet 4.6</strong> solved only <strong>1 of 10</strong>, while <strong>Claude Opus 4.6</strong> solved <strong>0 of 10</strong>.</p>
+    <p>After rerunning the Claude family with Anthropic&rsquo;s exposed thinking controls, the headline still holds. The strongest model in the benchmark was <strong>GPT-5.4</strong>, which solved <strong>9 of 10</strong> mazes exactly. <strong>Gemini 3.1 Pro Preview</strong> was close behind at <strong>8 of 10</strong>, and <strong>Gemini 3 Flash</strong> remained the only other model with a clearly positive score at <strong>6 of 10</strong>.</p>
+    <p>The Claude rerun makes the comparison fairer, but it does not change the practical picture. <strong>Claude Opus 4.6</strong> improved to <strong>2 of 10</strong> under adaptive <code>medium</code> thinking. <strong>Claude Sonnet 4.6</strong> still solved <strong>0 of 10</strong>, with <strong>maze 8</strong> failing to return after more than <strong>16 minutes</strong> and being counted as a miss. <strong>Claude Haiku 4.5</strong> at <code>budget_tokens=4096</code> also solved <strong>0 of 10</strong>.</p>
     <p>That is the practical point of the experiment. Strong code generation does not automatically imply strong visual understanding. If a model has to look at pixels, recover spatial structure, and judge what is actually on the screen, that appears to be a separate capability.</p>
   </div>
   <div class="chart-container">
@@ -944,17 +1035,35 @@ tr:last-child td { border-bottom: none; }
 </section>
 
 <!-- ============================================================
+     HEATMAP
+     ============================================================ -->
+<section class="section article--wide reveal" id="heatmap">
+  <div style="max-width:var(--content-w); margin:0 auto 24px;">
+    <h2 class="heading-2">Per-Maze Exact Solve Heatmap</h2>
+    <p class="prose" style="margin-bottom:8px; color:var(--ink-secondary); font-size:0.92rem; font-family:var(--font-sans);">This view keeps only the benchmark outcome that matters: did the model recover an accepted shortest path on that maze or not? There is no partial credit here.</p>
+  </div>
+  <div class="table-wrap">
+    <table class="heatmap-table" id="heatmap-table"></table>
+  </div>
+  <div class="legend article" style="max-width:var(--content-w); padding-left:0; padding-right:0;">
+    <span><span class="legend-swatch" style="background:var(--good-bg)"></span>Exact shortest path found</span>
+    <span><span class="legend-swatch" style="background:var(--bad-bg)"></span>Missed</span>
+  </div>
+</section>
+
+<!-- ============================================================
      LATENCY
      ============================================================ -->
 <section class="section article--wide reveal" id="latency">
   <h2 class="heading-2">Latency: Correct Does Not Mean Fast</h2>
   <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
-    <p>The strongest models were not fast. <strong>GPT-5.4</strong> averaged about <strong>51 seconds</strong> per maze, while <strong>Gemini 3.1 Pro Preview</strong> averaged about <strong>85 seconds</strong>. Even <strong>Gemini 3 Flash</strong>, which is clearly weaker than the top two, still averaged more than <strong>76 seconds</strong>.</p>
+    <p>The strongest models were not fast. <strong>GPT-5.4</strong> averaged about <strong>51 seconds</strong> per maze, while <strong>Gemini 3.1 Pro Preview</strong> averaged about <strong>83 seconds</strong>. Even <strong>Gemini 3 Flash</strong>, which is clearly weaker than the top two, still averaged about <strong>76 seconds</strong>.</p>
     <p>That matters because a human looking at these mazes often gets a strong intuition for the route within a few seconds. So the gap is not only about <em>whether</em> a model reaches the right answer. It is also about <em>how</em> it reaches it. Current systems still look comparatively serial and token-heavy, rather than showing the kind of fast visual intuition we would want from more advanced AI systems.</p>
-    <p>This suggests there is still substantial room for improvement in visually grounded reasoning. A future system should not only solve these mazes reliably, but do so with much less deliberation.</p>
+    <p>The Claude reruns reinforce that point rather than weakening it. <strong>Claude Sonnet 4.6</strong> took roughly <strong>130 to 170 seconds</strong> on mazes 7, 9, and 10, and still never returned maze 8 after more than <strong>16 minutes</strong>. <strong>Claude Opus 4.6</strong> completed all ten mazes under adaptive <code>medium</code>, but the combined run stalled before flushing a full latency summary, so I exclude its average from the chart below instead of inventing one.</p>
+    <p>This is part of why the benchmark feels revealing. Even the best-performing models often look like they are reconstructing the puzzle step by step rather than understanding it holistically. A future system should not only solve these mazes reliably, but do so with much less deliberation.</p>
   </div>
   <div class="chart-container">
-    <div class="chart-title" style="max-width:var(--content-w); margin:0 auto 16px;">Average response time by model</div>
+    <div class="chart-title" style="max-width:var(--content-w); margin:0 auto 16px;">Average response time by model (clean full-run averages only)</div>
     <div id="chart-latency"></div>
   </div>
 </section>
@@ -1038,108 +1147,14 @@ tr:last-child td { border-bottom: none; }
 </section>
 
 <!-- ============================================================
-     METHODOLOGY
-     ============================================================ -->
-<section class="section article reveal" id="methodology">
-  <h2 class="heading-2">Methodology</h2>
-  <div class="prose">
-    <p><strong>Motivation:</strong> the benchmark is meant to isolate direct visual grounding. In simulator-driven product work, models can often generate app code competently while still struggling to inspect screenshots, notice layout defects, or reason from pixels. These mazes are a compact way to probe that gap.</p>
-    <p><strong>Dataset:</strong> 10 existing maze images stored locally. We did not convert them into symbolic matrices, and we did not generate synthetic mazes. The benchmark uses the image files directly.</p>
-    <p><strong>Models:</strong> OpenAI GPT-5.4 and GPT-5.1; Anthropic Claude Opus 4.6, Claude Sonnet 4.6, and Claude Haiku 4.5; Google Gemini 3.1 Pro Preview and Gemini 3 Flash; Alibaba Qwen 3.5 Plus and Qwen 3.5 Flash through DashScope.</p>
-    <p><strong>Setup:</strong> every model saw the same image-plus-prompt setup with tools disabled. Movement was restricted to up, down, left, and right. Walls were blocked, paths were traversable, traps had to be avoided, and the shortest path length was defined as the number of moves rather than the number of visited cells.</p>
-    <p><strong>Run configuration:</strong> OpenAI models were run with reasoning effort set to <code>medium</code>. Gemini was rerun with a larger token cap to eliminate parse failures. DashScope Qwen runs used <code>enable_thinking=true</code> with a capped <code>thinking_budget=2048</code> to keep the multimodal calls tractable.</p>
-  </div>
-
-  <details class="prompt-block" id="maze-prompt">
-    <summary>View the exact prompt sent to every model</summary>
-    <pre>You are solving a visual maze puzzle from the image only.
-
-Important rules:
-- Base your answer only on what you can see in the image.
-- Do not use any external tools, code, search, calculators, or graph-search programs.
-- Do not assume anything that is not visually present.
-- Only use 4-directional movement: up, down, left, right.
-- No diagonal moves.
-- Wall tiles are blocked.
-- Walkable tiles can be traversed.
-- Trap tiles, if present, are dangerous and must be avoided; they are not traversable.
-- The start tile is the player character.
-- The goal tile is the treasure.
-- The shortest path length is the number of moves, not the number of visited cells.
-- If the image is ambiguous, say so explicitly instead of guessing.
-
-First visually identify the grid and the special tiles, then solve the maze.
-
-Return the answer in this exact JSON format:
-
-{
-  "grid_size": [rows, cols],
-  "start_found": true_or_false,
-  "goal_found": true_or_false,
-  "reachable": true_or_false,
-  "shortest_path_length": integer_or_null,
-  "path": ["R","D","L","U"] or [],
-  "confidence": "high" | "medium" | "low",
-  "image_ambiguity": "none" | "minor" | "major"
-}
-
-Rules for the JSON:
-- If start or goal cannot be identified with confidence, set confidence to "low".
-- If reachable is false, set "shortest_path_length" to null and "path" to [].
-- If reachable is true, provide one valid shortest path.
-- Output JSON only, with no extra text.</pre>
-  </details>
-
-  <div class="metric-grid">
-    <div class="metric-card">
-      <div class="metric-label">Dataset</div>
-      <div class="metric-value">10</div>
-      <div class="metric-note">Existing maze images used directly as input.</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Models</div>
-      <div class="metric-value">9</div>
-      <div class="metric-note">OpenAI, Anthropic, Google Gemini, and Qwen via DashScope.</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Ground Truth</div>
-      <div class="metric-value">8 + 2</div>
-      <div class="metric-note">Eight reachable mazes and two unreachable ones.</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Scoring</div>
-      <div class="metric-value">Exact</div>
-      <div class="metric-note">A maze is solved only if the accepted shortest path is recovered.</div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     HEATMAP
-     ============================================================ -->
-<section class="section article--wide reveal" id="heatmap">
-  <div style="max-width:var(--content-w); margin:0 auto 24px;">
-    <h2 class="heading-2">Per-Maze Exact Solve Heatmap</h2>
-    <p class="prose" style="margin-bottom:8px; color:var(--ink-secondary); font-size:0.92rem; font-family:var(--font-sans);">This view keeps only the benchmark outcome that matters: did the model recover an accepted shortest path on that maze or not? There is no partial credit here.</p>
-  </div>
-  <div class="table-wrap">
-    <table class="heatmap-table" id="heatmap-table"></table>
-  </div>
-  <div class="legend article" style="max-width:var(--content-w); padding-left:0; padding-right:0;">
-    <span><span class="legend-swatch" style="background:var(--good-bg)"></span>Exact shortest path found</span>
-    <span><span class="legend-swatch" style="background:var(--bad-bg)"></span>Missed</span>
-  </div>
-</section>
-
-<!-- ============================================================
      CONCLUSION
      ============================================================ -->
 <section class="section article reveal" id="conclusion">
   <h2 class="heading-2">Conclusion</h2>
   <div class="prose">
     <p><strong>Visual grounding deserves its own evaluation slice.</strong> Coding benchmarks are not enough if the workflow depends on reading screenshots, judging layouts, or catching visual defects. This experiment is small, but it shows that visual performance can diverge sharply from coding reputation.</p>
-    <p><strong>The Claude result is the practical surprise.</strong> Claude models are strong coding tools. But on this narrow image-only task, they were weak. That matches the intuition that motivated the benchmark: some models may be strong at turning requirements into code while still lagging on direct pixel-level interpretation.</p>
-    <p><strong>The gap is not subtle.</strong> GPT-5.4 and Gemini 3.1 Pro Preview are clustered near the top, while most of the field rarely recovers the full shortest path. These mazes are visually simple for humans, so the failures here point to a real limitation in direct visual-spatial reading.</p>
+    <p><strong>The Claude rerun did not rescue the family.</strong> Making the comparison fairer was important, so I reran Claude with Anthropic&rsquo;s exposed thinking controls. That improved <strong>Claude Opus 4.6</strong> to <strong>2 of 10</strong>, but <strong>Claude Sonnet 4.6</strong> still failed across the board and one maze never returned at all. So the headline of the benchmark survives the fairer setup.</p>
+    <p><strong>The gap is not subtle.</strong> GPT-5.4 and Gemini 3.1 Pro Preview are still clustered near the top, while most of the field rarely recovers the full shortest path. These mazes are visually simple for humans, so the failures here point to a real limitation in direct visual-spatial reading.</p>
     <p><strong>And even the strongest results are still slow.</strong> The best-performing models often needed tens of seconds on mazes that a human can often scan in a handful of seconds. So the open problem is not just accuracy. It is fast, efficient visual intuition.</p>
   </div>
   <div class="callout callout--good">
@@ -1150,99 +1165,103 @@ Rules for the JSON:
 
 <script>
 const modelResults = [
-  { id: "openai:gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, reach: 9, length: 9, strictJson: 10, schema: 10, latency: 51.06 },
-  { id: "gemini:gemini-3-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", vendorColor: "#a08b5b", solved: 8, reach: 10, length: 9, strictJson: 2, schema: 10, latency: 85.36 },
-  { id: "gemini:gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google", vendorColor: "#a08b5b", solved: 6, reach: 8, length: 6, strictJson: 0, schema: 10, latency: 76.42 },
-  { id: "dashscope:qwen3.5-flash", label: "Qwen 3.5 Flash", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 1, reach: 9, length: 1, strictJson: 10, schema: 10, latency: 51.85 },
-  { id: "anthropic:claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 1, reach: 7, length: 2, strictJson: 0, schema: 9, latency: 17.94 },
-  { id: "openai:gpt-5.1", label: "GPT-5.1", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 1, reach: 3, length: 1, strictJson: 8, schema: 6, latency: 85.39 },
-  { id: "anthropic:claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, reach: 8, length: 5, strictJson: 0, schema: 9, latency: 6.10 },
-  { id: "anthropic:claude-opus-4-6", label: "Claude Opus 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, reach: 8, length: 1, strictJson: 0, schema: 10, latency: 17.77 },
-  { id: "dashscope:qwen3.5-plus", label: "Qwen 3.5 Plus", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 0, reach: 8, length: 0, strictJson: 9, schema: 9, latency: 67.95 }
+  { id: "openai:gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, latency: 51.06 },
+  { id: "gemini:gemini-3-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", vendorColor: "#a08b5b", solved: 8, latency: 82.75 },
+  { id: "gemini:gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google", vendorColor: "#a08b5b", solved: 6, latency: 76.18 },
+  { id: "anthropic:claude-opus-4-6", label: "Claude Opus 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 2, latency: null },
+  { id: "dashscope:qwen3.5-flash", label: "Qwen 3.5 Flash", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 1, latency: 51.85 },
+  { id: "openai:gpt-5.1", label: "GPT-5.1", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 1, latency: 85.39 },
+  { id: "anthropic:claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, latency: null },
+  { id: "anthropic:claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, latency: 17.51 },
+  { id: "dashscope:qwen3.5-plus", label: "Qwen 3.5 Plus", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 0, latency: 67.95 }
 ];
+
+const latencyResults = modelResults
+  .filter((model) => typeof model.latency === "number")
+  .sort((a, b) => a.latency - b.latency);
 
 const mazeStates = {
   "maze_1": {
     "openai:gpt-5.4": "solved",
     "openai:gpt-5.1": "fail",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "solved",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "anthropic:claude-opus-4-6": "solved",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "solved",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_2": {
     "openai:gpt-5.4": "fail",
-    "openai:gpt-5.1": "schema",
+    "openai:gpt-5.1": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
-    "anthropic:claude-haiku-4-5-20251001": "schema",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "fail",
-    "dashscope:qwen3.5-plus": "schema",
+    "dashscope:qwen3.5-plus": "fail",
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_3": {
     "openai:gpt-5.4": "solved",
     "openai:gpt-5.1": "fail",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "fail",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_4": {
     "openai:gpt-5.4": "solved",
     "openai:gpt-5.1": "fail",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "solved",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_5": {
     "openai:gpt-5.4": "solved",
-    "openai:gpt-5.1": "schema",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "schema",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "solved",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_6": {
     "openai:gpt-5.4": "solved",
-    "openai:gpt-5.1": "schema",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
     "gemini:gemini-3-flash-preview": "solved",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_7": {
     "openai:gpt-5.4": "solved",
-    "openai:gpt-5.1": "schema",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
-    "gemini:gemini-3-pro-preview": "partial",
-    "gemini:gemini-3-flash-preview": "partial",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
+    "gemini:gemini-3-pro-preview": "fail",
+    "gemini:gemini-3-flash-preview": "fail",
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_8": {
     "openai:gpt-5.4": "solved",
     "openai:gpt-5.1": "solved",
-    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-opus-4-6": "solved",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
@@ -1252,39 +1271,39 @@ const mazeStates = {
   },
   "maze_9": {
     "openai:gpt-5.4": "solved",
-    "openai:gpt-5.1": "partial",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
-    "gemini:gemini-3-pro-preview": "partial",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
+    "gemini:gemini-3-pro-preview": "fail",
     "gemini:gemini-3-flash-preview": "solved",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   },
   "maze_10": {
     "openai:gpt-5.4": "solved",
-    "openai:gpt-5.1": "partial",
-    "anthropic:claude-opus-4-6": "partial",
-    "anthropic:claude-sonnet-4-6": "partial",
-    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
     "gemini:gemini-3-pro-preview": "solved",
-    "gemini:gemini-3-flash-preview": "partial",
-    "dashscope:qwen3.5-plus": "partial",
-    "dashscope:qwen3.5-flash": "partial"
+    "gemini:gemini-3-flash-preview": "fail",
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "fail"
   }
 };
 
 const mazes = [
-  { id: "maze_1", title: "Maze 1", image: "mazes_imgs/maze_1.jpg", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 4 },
-  { id: "maze_2", title: "Maze 2", image: "mazes_imgs/maze_2.jpg", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 1 },
-  { id: "maze_3", title: "Maze 3", image: "mazes_imgs/maze_3.png", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 2 },
-  { id: "maze_4", title: "Maze 4", image: "mazes_imgs/maze_4.png", reachable: true, shortestLength: 12, acceptedPaths: 3, solvedBy: 3 },
-  { id: "maze_5", title: "Maze 5", image: "mazes_imgs/maze_5.png", reachable: true, shortestLength: 20, acceptedPaths: 2, solvedBy: 3 },
-  { id: "maze_6", title: "Maze 6", image: "mazes_imgs/maze_6.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 3 },
-  { id: "maze_7", title: "Maze 7", image: "mazes_imgs/maze_7.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 1 },
-  { id: "maze_8", title: "Maze 8", image: "mazes_imgs/maze_8.png", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 5 },
-  { id: "maze_9", title: "Maze 9", image: "mazes_imgs/maze_9.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 2 },
-  { id: "maze_10", title: "Maze 10", image: "mazes_imgs/maze_10.png", reachable: true, shortestLength: 18, acceptedPaths: 2, solvedBy: 2 }
+  { id: "maze_1", title: "Maze 1", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_1.jpg", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 4 },
+  { id: "maze_2", title: "Maze 2", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_2.jpg", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 1 },
+  { id: "maze_3", title: "Maze 3", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_3.png", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 2 },
+  { id: "maze_4", title: "Maze 4", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_4.png", reachable: true, shortestLength: 12, acceptedPaths: 3, solvedBy: 3 },
+  { id: "maze_5", title: "Maze 5", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_5.png", reachable: true, shortestLength: 20, acceptedPaths: 2, solvedBy: 3 },
+  { id: "maze_6", title: "Maze 6", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_6.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 3 },
+  { id: "maze_7", title: "Maze 7", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_7.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 1 },
+  { id: "maze_8", title: "Maze 8", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_8.png", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 6 },
+  { id: "maze_9", title: "Maze 9", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_9.jpeg", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 2 },
+  { id: "maze_10", title: "Maze 10", image: "https://pub-d5e0d5ce23fd4035bf306f7142f7c0b7.r2.dev/images/maze_10.png", reachable: true, shortestLength: 18, acceptedPaths: 2, solvedBy: 2 }
 ];
 
 function esc(s) {
@@ -1397,7 +1416,8 @@ function renderSolveTierCallout() {
       <div class="callout-title">What the ranking says</div>
       <p><strong>Tier 1:</strong> GPT-5.4 and Gemini 3.1 Pro actually recover shortest paths at high rates. These are the only models that looked consistently strong on the full task.</p>
       <p><strong>Tier 2:</strong> Gemini 3 Flash sits in the middle. It solves enough mazes to look capable, but it is clearly not at the same level as the top two.</p>
-      <p><strong>Tier 3:</strong> Claude and Qwen mostly fail on the benchmark&rsquo;s only target metric: recovering the accepted shortest path from the image itself.</p>
+      <p><strong>Tier 3:</strong> Claude Opus 4.6 improves under adaptive <code>medium</code>, but only to 2 of 10. GPT-5.1 and Qwen 3.5 Flash each solve just 1 of 10.</p>
+      <p><strong>Tier 4:</strong> Claude Sonnet 4.6, Claude Haiku 4.5, and Qwen 3.5 Plus still do not recover a single accepted shortest path in the fairer rerun.</p>
     </div>
   `;
 }
@@ -1429,7 +1449,7 @@ function initToc() {
 }
 
 renderHorizontalBars("chart-solves", modelResults, "solved", 10, "10 solved");
-renderHorizontalBars("chart-latency", modelResults, "latency", 90, "90s", (value) => `${value.toFixed(1)}s`);
+renderHorizontalBars("chart-latency", latencyResults, "latency", 90, "90s", (value) => `${value.toFixed(1)}s`);
 renderHeatmap();
 renderGallery();
 renderSolveTierCallout();
