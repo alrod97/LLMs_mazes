@@ -1,0 +1,62 @@
+{
+  "maze_1": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "DDDDDDRRRRRR"
+    ]
+  },
+  "maze_2": {
+    "reachable": false,
+    "accepted_shortest_paths": []
+  },
+  "maze_3": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "RRDDRRDDRDDR"
+    ]
+  },
+  "maze_4": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "DDDRRDDDRRRR",
+      "DDDRRDRRRRDD",
+      "DDDRRDRRDDRR"
+    ]
+  },
+  "maze_5": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "RRRDDLLLDDRRRDDRRRRD",
+      "RRRDDLLLDDRRRDDRRRDR"
+    ]
+  },
+  "maze_6": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "RDDRRDDRRDRRRDDD"
+    ]
+  },
+  "maze_7": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "RRDDRRDDRRDDRDDR"
+    ]
+  },
+  "maze_8": {
+    "reachable": false,
+    "accepted_shortest_paths": []
+  },
+  "maze_9": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "DDRRRDDRDDRRDRRD"
+    ]
+  },
+  "maze_10": {
+    "reachable": true,
+    "accepted_shortest_paths": [
+      "DDDDDDDDDRRRRRRRRR",
+      "RRRRRRRRRDDDDDDDDD"
+    ]
+  }
+}

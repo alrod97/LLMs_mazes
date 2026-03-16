@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&ldquo;It Looks Obvious to Me, But...&rdquo; Visual Grounding Gaps in Frontier Multimodal Models</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   CSS CUSTOM PROPERTIES
+   ================================================================ */
+:root {
+  --bg: #faf9f5;
+  --bg-warm: #f5f0e8;
+  --paper: #ffffff;
+  --ink: #191512;
+  --ink-secondary: #5c564e;
+  --ink-tertiary: #8a847b;
+  --border: #e8e2d9;
+  --border-strong: #d5cec3;
+  --accent: #d97757;
+  --accent-soft: #fef3ee;
+  --accent-dark: #b85a3a;
+  --good: #1a7a52;
+  --good-bg: #e8f5ee;
+  --bad: #c94a3a;
+  --bad-bg: #fceeed;
+  --neutral: #6b8fa3;
+  --neutral-bg: #eef3f7;
+  --chart-blue: #3d7a9e;
+  --chart-purple: #7b6fa0;
+  --chart-gold: #a08b5b;
+  --chart-teal: #2f7f69;
+  --code-bg: #1e1e1e;
+  --code-fg: #d4d4d4;
+
+  --font-serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', Helvetica, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+  --content-w: 860px;
+  --wide-w: 1140px;
+  --section-gap: 72px;
+  --para-gap: 22px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ================================================================
+   RESET & BASE
+   ================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.72;
+  overflow-x: hidden;
+}
+a { color: var(--accent-dark); text-decoration-color: var(--border-strong); text-underline-offset: 3px; transition: color .2s; }
+a:hover { color: var(--accent); }
+img { max-width: 100%; display: block; }
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* ================================================================
+   LAYOUT
+   ================================================================ */
+.article { max-width: var(--content-w); margin: 0 auto; padding: 0 28px; }
+.article--wide { max-width: var(--wide-w); margin-left: auto; margin-right: auto; padding: 0 28px; }
+.section { margin-bottom: var(--section-gap); }
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+.heading-1 {
+  font-family: var(--font-sans);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.heading-2 {
+  font-family: var(--font-sans);
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+.heading-3 {
+  font-family: var(--font-sans);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.prose p { margin-bottom: var(--para-gap); }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { font-weight: 600; }
+.prose em { font-style: italic; }
+
+/* ================================================================
+   HERO
+   ================================================================ */
+.hero {
+  padding-top: 80px;
+  padding-bottom: 48px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--section-gap);
+}
+.hero__eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+.hero__title {
+  max-width: 780px;
+  margin: 0 auto 16px;
+}
+.hero__subtitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  color: var(--ink-secondary);
+  max-width: 600px;
+  margin: 0 auto 28px;
+  line-height: 1.55;
+}
+.hero__meta {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink-tertiary);
+}
+.hero__api-note {
+  margin: 14px auto 0;
+  max-width: 980px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+.hero__api-note strong {
+  color: var(--ink);
+}
+.hero__visual {
+  margin: 44px auto 0;
+  max-width: 1140px;
+}
+.hero__visual-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+.hero__visual-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 14px 14px 10px;
+}
+.hero__visual-panel-title {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.hero__visual-panel-subtitle {
+  margin-top: 2px;
+  margin-bottom: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-tertiary);
+}
+.hero__figure-note {
+  margin: 12px auto 0;
+  max-width: 1140px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+  text-align: left;
+}
+
+/* ================================================================
+   PROSE COMPONENTS
+   ================================================================ */
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 20px 24px;
+  margin: 28px 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.97rem;
+}
+.callout p { margin-bottom: 10px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout .callout-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+}
+.callout--good { border-left-color: var(--good); background: var(--good-bg); }
+.callout--good .callout-title { color: var(--good); }
+.callout--bad { border-left-color: var(--bad); background: var(--bad-bg); }
+.callout--bad .callout-title { color: var(--bad); }
+.callout--neutral { border-left-color: var(--neutral); background: var(--neutral-bg); }
+.callout--neutral .callout-title { color: var(--chart-blue); }
+
+.prompt-block { margin: 24px 0; }
+.prompt-block summary {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  cursor: pointer;
+  padding: 10px 0;
+  list-style: none;
+}
+.prompt-block summary::before { content: '+ '; }
+.prompt-block[open] summary::before { content: '- '; }
+.prompt-block pre {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 20px 24px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 8px;
+}
+
+.figure-caption {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-tertiary);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.45;
+}
+
+.paper-figure {
+  margin: 32px auto;
+  max-width: 980px;
+  padding: 14px 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 8px 22px rgba(31, 25, 19, 0.06);
+}
+.thesis-paragraph {
+  font-family: var(--font-sans);
+  font-size: clamp(1.05rem, 2.2vw, 1.22rem);
+  line-height: 1.62;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+.thesis-paragraph strong {
+  color: var(--accent-dark);
+}
+.paper-figure img {
+  width: 100%;
+  height: auto;
+  border: 1px solid #e3ddd3;
+  border-radius: 10px;
+  background: var(--bg-warm);
+}
+.paper-figure .figure-caption {
+  margin-top: 10px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: var(--section-gap) 0;
+}
+
+/* ================================================================
+   CHARTS
+   ================================================================ */
+.chart-container {
+  margin: 32px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chart-container svg text {
+  font-family: var(--font-sans);
+}
+.chart-title {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+.chart-legend {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+}
+.chart-legend span { display: flex; align-items: center; gap: 6px; }
+.chart-legend .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+.hbar-chart {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+}
+.hbar-axis {
+  display: grid;
+  grid-template-columns: 260px 1fr 70px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 0 10px;
+  border-bottom: 1.5px solid #e0dbd2;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.hbar-axis-label {
+  color: var(--ink-secondary);
+  text-align: right;
+}
+.hbar-axis-domain {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-tertiary);
+}
+.hbar-row {
+  display: grid;
+  grid-template-columns: 260px 1fr 70px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eae5da;
+  transition: background .15s;
+}
+.hbar-row:hover { background: rgba(217,119,87,.04); }
+.hbar-row:nth-child(even) { background: rgba(245,240,232,.45); }
+.hbar-row:nth-child(even):hover { background: rgba(217,119,87,.06); }
+.hbar-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.hbar-rank {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.hbar-model-info { min-width: 0; }
+.hbar-model-name {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hbar-vendor-name {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #9a938a;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+.hbar-bar-area {
+  position: relative;
+  height: 36px;
+}
+.hbar-bar-track {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: #f0ece4;
+  border-radius: 6px;
+  width: 100%;
+}
+.hbar-bar {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  height: calc(100% - 8px);
+  border-radius: 5px;
+  min-width: 4px;
+  transition: width .6s var(--ease), opacity .4s;
+  opacity: 0.9;
+}
+.hbar-bar:hover { opacity: 1; }
+.hbar-value {
+  font-size: 1.12rem;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.vendor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.vendor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.mini-hbars {
+  display: grid;
+  gap: 8px;
+}
+.mini-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 42px;
+  gap: 10px;
+  align-items: center;
+}
+.mini-label {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.mini-track {
+  height: 10px;
+  background: #efe9de;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mini-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.mini-value {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--ink-secondary);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0 8px;
+}
+.metric-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 16px 16px 14px;
+}
+.metric-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-tertiary);
+}
+.metric-value {
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.metric-note {
+  margin-top: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+/* ================================================================
+   TABLES
+   ================================================================ */
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+}
+table { width: 100%; border-collapse: collapse; background: white; min-width: 860px; }
+th, td { border-bottom: 1px solid #ece3d7; padding: 8px 10px; text-align: left; font-size: 13px; font-family: var(--font-sans); }
+th { background: #faf4ec; color: #554d45; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
+tr:last-child td { border-bottom: none; }
+.table-num { text-align: right; font-variant-numeric: tabular-nums; }
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+}
+.score-good { background: var(--good-bg); color: var(--good); }
+.score-mid { background: var(--neutral-bg); color: var(--chart-blue); }
+.score-bad { background: var(--bad-bg); color: var(--bad); }
+
+/* ================================================================
+   MAZE FIGURES / GALLERY
+   ================================================================ */
+.maze-collage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.maze-collage-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.maze-collage-card img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+.maze-collage-note {
+  padding: 10px 12px 12px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+.maze-gallery {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+.maze-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.maze-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #f4efe7;
+}
+.maze-card-body {
+  padding: 12px;
+}
+.maze-card-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-family: var(--font-sans);
+}
+.maze-card-title strong {
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+.maze-card-meta {
+  display: grid;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+}
+.maze-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.maze-status--reachable { background: var(--good-bg); color: var(--good); }
+.maze-status--blocked { background: var(--bad-bg); color: var(--bad); }
+.maze-meter {
+  margin-top: 8px;
+}
+.maze-meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--ink-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+/* ================================================================
+   HEATMAP
+   ================================================================ */
+.heatmap-table {
+  min-width: 980px;
+}
+.heatmap-cell {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+}
+.heatmap-solved { background: var(--good-bg); color: var(--good); }
+.heatmap-partial { background: #fff3dd; color: #9b6b17; }
+.heatmap-fail { background: var(--bad-bg); color: var(--bad); }
+.heatmap-schema { background: var(--neutral-bg); color: var(--chart-blue); }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* ================================================================
+   EXAMPLE OUTPUTS
+   ================================================================ */
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.example-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 14px;
+}
+.example-card .heading-3 {
+  margin-bottom: 8px;
+}
+.example-card pre {
+  margin-top: 10px;
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ================================================================
+   QUALITATIVE CASE STUDY
+   ================================================================ */
+.case-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 26px 0 18px;
+}
+.case-stat {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 14px 16px;
+}
+.case-stat-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+  margin-bottom: 8px;
+}
+.case-stat-value {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.case-stat-note {
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+.screenshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+.screenshot-grid--three {
+  grid-template-columns: 1.05fr 1fr 1fr;
+}
+.screenshot-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 12px;
+  box-shadow: 0 8px 22px rgba(31, 25, 19, 0.06);
+}
+.screenshot-kicker {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.screenshot-card img {
+  width: 100%;
+  height: auto;
+  border: 1px solid #e3ddd3;
+  border-radius: 10px;
+  background: var(--bg-warm);
+}
+.screenshot-caption {
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+.screenshot-caption strong {
+  color: var(--ink);
+}
+
+/* ================================================================
+   TABLE OF CONTENTS (side nav)
+   ================================================================ */
+.nav-toc {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toc-link {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-tertiary);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-left: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.toc-link:hover { color: var(--ink-secondary); }
+.toc-link.active {
+  color: var(--accent-dark);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ================================================================
+   SCROLL REVEAL
+   ================================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1200px) {
+  .nav-toc { display: none; }
+}
+@media (max-width: 980px) {
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .example-grid { grid-template-columns: 1fr; }
+  .maze-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .case-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .screenshot-grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hbar-axis, .hbar-row { grid-template-columns: 200px 1fr 56px; gap: 10px; }
+}
+@media (max-width: 768px) {
+  body { font-size: 17px; }
+  :root { --section-gap: 48px; }
+  .article, .article--wide { padding: 0 18px; }
+  .hero { padding-top: 48px; }
+  .paper-figure { padding: 10px; border-radius: 10px; }
+  .maze-collage { grid-template-columns: 1fr; }
+  .case-strip, .screenshot-grid, .screenshot-grid--three { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  body { font-size: 16px; }
+  .heading-1 { font-size: 1.8rem; }
+  .callout { padding: 14px 16px; }
+  .metric-grid { grid-template-columns: 1fr; }
+  .maze-gallery { grid-template-columns: 1fr; }
+  .hbar-axis, .hbar-row { grid-template-columns: 140px 1fr 46px; gap: 6px; }
+  .hbar-model-name { font-size: 0.85rem; }
+  .hbar-vendor-name { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TABLE OF CONTENTS
+     ============================================================ -->
+<nav class="nav-toc" id="toc">
+  <a href="#hero" class="toc-link active">Top</a>
+  <a href="#results-visual" class="toc-link">Results</a>
+  <a href="#latency" class="toc-link">Latency</a>
+  <a href="#web-ui-case" class="toc-link">Case Study</a>
+  <a href="#methodology" class="toc-link">Methodology</a>
+  <a href="#heatmap" class="toc-link">Heatmap</a>
+  <a href="#conclusion" class="toc-link">Conclusion</a>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<header class="hero section article--wide" id="hero">
+  <div class="hero__eyebrow">Research</div>
+  <h1 class="heading-1 hero__title">&ldquo;It Looks Obvious to Me, But...&rdquo; Visual Grounding Gaps in Frontier Multimodal Models</h1>
+  <p class="hero__subtitle">Strong coding models can generate UI. This benchmark asks a narrower question: can they actually read pixels well enough to recover the shortest path from a simple maze image?</p>
+  <div class="hero__meta">March 2026</div>
+  <div class="hero__api-note"><strong>Important scope note:</strong> The quantitative benchmark results in this report are from provider <strong>API</strong> calls. Every model received the same maze image and the same prompt. No tools were enabled. A later qualitative section uses <strong>consumer web-interface screenshots</strong> from ChatGPT.com and Claude.ai as illustrative evidence only; those screenshots are not part of the scored benchmark.</div>
+  <div class="hero__visual">
+    <div class="hero__visual-panel">
+      <div class="hero__visual-panel-title">The 10 Benchmark Mazes</div>
+      <div class="hero__visual-panel-subtitle">Two rows, five columns. Each card shows the maze, the human reachability label, and how many of the 9 tested models recovered an accepted shortest path.</div>
+      <div class="maze-gallery" id="hero-maze-grid"></div>
+    </div>
+  </div>
+  <div class="hero__figure-note"><strong>How to read this benchmark grid:</strong> The cards are the full dataset. Some mazes are straightforward, some separate the field, and two are unreachable. The score shown on each card is the number of tested models that solved that maze exactly.</div>
+</header>
+<!-- ============================================================
+     RESULTS: VISUAL SOLVING
+     ============================================================ -->
+<section class="section article--wide reveal" id="results-visual">
+  <h2 class="heading-2">Main Results</h2>
+  <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
+    <p>This benchmark asks one thing only: from the maze image alone, did the model recover the <strong>correct shortest path</strong> to the treasure? A maze counts as solved only if reachability, shortest-path length, and the returned shortest path are all correct.</p>
+    <p>The strongest model in the benchmark was <strong>GPT-5.4</strong>, which solved <strong>9 of 10</strong> mazes exactly. <strong>Gemini 3.1 Pro Preview</strong> was close behind at <strong>8 of 10</strong>. After that, the field drops off sharply.</p>
+    <p>The most striking negative result is the <strong>Claude family</strong>. Claude models are often excellent coding assistants, but on this image-only visual grounding task they were weak: <strong>Claude Sonnet 4.6</strong> solved only <strong>1 of 10</strong>, while <strong>Claude Opus 4.6</strong> solved <strong>0 of 10</strong>.</p>
+    <p>That is the practical point of the experiment. Strong code generation does not automatically imply strong visual understanding. If a model has to look at pixels, recover spatial structure, and judge what is actually on the screen, that appears to be a separate capability.</p>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title" style="max-width:var(--content-w); margin:0 auto 16px;">Exact shortest-path solves by model</div>
+    <div id="chart-solves"></div>
+  </div>
+  <div style="max-width:var(--content-w); margin:32px auto 0;" id="callout-solve-tiers"></div>
+  <div class="callout callout--neutral" style="max-width:var(--content-w); margin:28px auto 0;">
+    <div class="callout-title">Important caution</div>
+    <p>This is a narrow benchmark, not a universal ranking. A weak result here does <strong>not</strong> mean a model is bad overall, and a strong result here does <strong>not</strong> prove that a model is generally superior.</p>
+    <p>We also cannot infer the training recipe from this benchmark alone. One plausible interpretation is that some models were trained or post-trained more heavily on visual grounding tasks, but this experiment cannot establish why the differences appear. It only shows that on this image-only shortest-path task, the models separate sharply.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     LATENCY
+     ============================================================ -->
+<section class="section article--wide reveal" id="latency">
+  <h2 class="heading-2">Latency: Correct Does Not Mean Fast</h2>
+  <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
+    <p>The strongest models were not fast. <strong>GPT-5.4</strong> averaged about <strong>51 seconds</strong> per maze, while <strong>Gemini 3.1 Pro Preview</strong> averaged about <strong>85 seconds</strong>. Even <strong>Gemini 3 Flash</strong>, which is clearly weaker than the top two, still averaged more than <strong>76 seconds</strong>.</p>
+    <p>That matters because a human looking at these mazes often gets a strong intuition for the route within a few seconds. So the gap is not only about <em>whether</em> a model reaches the right answer. It is also about <em>how</em> it reaches it. Current systems still look comparatively serial and token-heavy, rather than showing the kind of fast visual intuition we would want from more advanced AI systems.</p>
+    <p>This suggests there is still substantial room for improvement in visually grounded reasoning. A future system should not only solve these mazes reliably, but do so with much less deliberation.</p>
+  </div>
+  <div class="chart-container">
+    <div class="chart-title" style="max-width:var(--content-w); margin:0 auto 16px;">Average response time by model</div>
+    <div id="chart-latency"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     QUALITATIVE WEB CASE STUDY
+     ============================================================ -->
+<section class="section article--wide reveal" id="web-ui-case">
+  <div style="max-width:var(--content-w); margin:0 auto 24px;">
+    <h2 class="heading-2">Qualitative Case Study: What The Web UIs Expose</h2>
+    <div class="prose">
+      <p>The API benchmark is the main evidence in this report. But the consumer web interfaces are useful for a different reason: they expose more of the model&rsquo;s visible reasoning process. On the unreachable maze below, both <strong>Claude.ai Opus 4.6 Extended</strong> and <strong>ChatGPT 5.4 Thinking</strong> appear to approach the image in a strikingly similar way.</p>
+      <p>What stands out is not only that both answers are wrong. It is <em>how</em> they get there. The visible trace looks like serial bookkeeping: estimate the grid size, map tiles into row and column coordinates, transcribe walls, and then manually trace candidate routes. That is very different from the fast visual intuition humans use on the same image.</p>
+    </div>
+  </div>
+
+  <div class="callout callout--neutral" style="max-width:var(--content-w); margin:0 auto 0;">
+    <div class="callout-title">This section is illustrative, not scored</div>
+    <p>These screenshots come from the consumer web products rather than the benchmark API runs. Hidden system prompts, product wrappers, and model settings may differ. We use them here only as qualitative evidence about the style of reasoning the products choose to expose.</p>
+  </div>
+
+  <div class="case-strip" style="max-width:var(--content-w); margin-left:auto; margin-right:auto;">
+    <div class="case-stat">
+      <div class="case-stat-label">Maze</div>
+      <div class="case-stat-value">Maze 2</div>
+      <div class="case-stat-note">This is one of the two unreachable mazes in the benchmark.</div>
+    </div>
+    <div class="case-stat">
+      <div class="case-stat-label">Ground Truth</div>
+      <div class="case-stat-value">Not Reachable</div>
+      <div class="case-stat-note">A correct answer must stop there and return no path.</div>
+    </div>
+    <div class="case-stat">
+      <div class="case-stat-label">Claude.ai</div>
+      <div class="case-stat-value">Reachable</div>
+      <div class="case-stat-note">Opus 4.6 Extended reconstructs the grid at length and still ends up wrong.</div>
+    </div>
+    <div class="case-stat">
+      <div class="case-stat-label">ChatGPT.com</div>
+      <div class="case-stat-value">Reachable After 6m 6s</div>
+      <div class="case-stat-note">ChatGPT 5.4 Thinking also returns a path on an unreachable maze.</div>
+    </div>
+  </div>
+
+  <div class="screenshot-grid">
+    <figure class="screenshot-card">
+      <div class="screenshot-kicker">Claude.ai Prompt</div>
+      <img src="assets/screenshots/claude_prompt.png" alt="Claude.ai Opus 4.6 Extended receiving the maze prompt and image.">
+      <figcaption class="screenshot-caption"><strong>Claude.ai Opus 4.6 Extended</strong> receives the benchmark-style prompt and the unreachable maze image.</figcaption>
+    </figure>
+    <figure class="screenshot-card">
+      <div class="screenshot-kicker">ChatGPT.com Prompt</div>
+      <img src="assets/screenshots/gpt_4_1_prompt.png" alt="ChatGPT 5.4 Thinking receiving the maze prompt and image.">
+      <figcaption class="screenshot-caption"><strong>ChatGPT 5.4 Thinking</strong> is given the same qualitative setup: the maze image and the same task framing.</figcaption>
+    </figure>
+  </div>
+
+  <div class="screenshot-grid screenshot-grid--three">
+    <figure class="screenshot-card">
+      <div class="screenshot-kicker">Claude.ai Thinking Trace</div>
+      <img src="assets/screenshots/claude_thinking_process.png" alt="Claude.ai Opus 4.6 Extended tracing grid dimensions and row column coordinates while solving the maze.">
+      <figcaption class="screenshot-caption">The exposed trace reads like <strong>manual grid transcription</strong>: 9x9 versus 10x10, row and column indexing, and explicit path tracing. The procedure is slow and brittle.</figcaption>
+    </figure>
+    <figure class="screenshot-card">
+      <div class="screenshot-kicker">Claude.ai Final Answer</div>
+      <img src="assets/screenshots/claude_result.png" alt="Claude.ai Opus 4.6 Extended giving a final JSON answer that incorrectly marks the unreachable maze as reachable.">
+      <figcaption class="screenshot-caption">After all that deliberation, <strong>Claude Opus 4.6 still declares the goal reachable</strong> and returns a path on an unreachable maze.</figcaption>
+    </figure>
+    <figure class="screenshot-card">
+      <div class="screenshot-kicker">ChatGPT.com Final Answer</div>
+      <img src="assets/screenshots/gpt_4_1_result.png" alt="ChatGPT 5.4 Thinking showing a six minute reasoning panel and a final JSON answer that incorrectly marks the unreachable maze as reachable.">
+      <figcaption class="screenshot-caption"><strong>ChatGPT 5.4 Thinking spends 6m 6s</strong> and also ends at the wrong conclusion. The issue is not just accuracy, but the serial, token-heavy path to the answer.</figcaption>
+    </figure>
+  </div>
+
+  <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
+    <p>There is an important nuance here. These screenshots do <strong>not</strong> prove that the models literally convert the image into a matrix internally. What they do show is that the reasoning the products choose to expose is organized that way: textualize the scene, count rows and columns, enumerate tiles, and only then search for a route.</p>
+    <p>That is precisely why this case matters. A human, including a child, can often reject this maze in a few seconds by visually recognizing the blockage pattern. By contrast, these systems appear to rely on a much more serial and fragile reconstruction process. More verbal deliberation is not automatically the same thing as better visual understanding.</p>
+    <p class="thesis-paragraph">This connects to a broader view often associated with <strong>Yann LeCun</strong> and other world-model advocates: next-token reasoning over a textualized scene may still be missing a stronger internal representation of the scene itself. If that is right, the path forward is not just to let models think longer, but to give them better latent spatial understanding so they can recognize impossibility almost immediately.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     METHODOLOGY
+     ============================================================ -->
+<section class="section article reveal" id="methodology">
+  <h2 class="heading-2">Methodology</h2>
+  <div class="prose">
+    <p><strong>Motivation:</strong> the benchmark is meant to isolate direct visual grounding. In simulator-driven product work, models can often generate app code competently while still struggling to inspect screenshots, notice layout defects, or reason from pixels. These mazes are a compact way to probe that gap.</p>
+    <p><strong>Dataset:</strong> 10 existing maze images stored locally. We did not convert them into symbolic matrices, and we did not generate synthetic mazes. The benchmark uses the image files directly.</p>
+    <p><strong>Models:</strong> OpenAI GPT-5.4 and GPT-5.1; Anthropic Claude Opus 4.6, Claude Sonnet 4.6, and Claude Haiku 4.5; Google Gemini 3.1 Pro Preview and Gemini 3 Flash; Alibaba Qwen 3.5 Plus and Qwen 3.5 Flash through DashScope.</p>
+    <p><strong>Setup:</strong> every model saw the same image-plus-prompt setup with tools disabled. Movement was restricted to up, down, left, and right. Walls were blocked, paths were traversable, traps had to be avoided, and the shortest path length was defined as the number of moves rather than the number of visited cells.</p>
+    <p><strong>Run configuration:</strong> OpenAI models were run with reasoning effort set to <code>medium</code>. Gemini was rerun with a larger token cap to eliminate parse failures. DashScope Qwen runs used <code>enable_thinking=true</code> with a capped <code>thinking_budget=2048</code> to keep the multimodal calls tractable.</p>
+  </div>
+
+  <details class="prompt-block" id="maze-prompt">
+    <summary>View the exact prompt sent to every model</summary>
+    <pre>You are solving a visual maze puzzle from the image only.
+
+Important rules:
+- Base your answer only on what you can see in the image.
+- Do not use any external tools, code, search, calculators, or graph-search programs.
+- Do not assume anything that is not visually present.
+- Only use 4-directional movement: up, down, left, right.
+- No diagonal moves.
+- Wall tiles are blocked.
+- Walkable tiles can be traversed.
+- Trap tiles, if present, are dangerous and must be avoided; they are not traversable.
+- The start tile is the player character.
+- The goal tile is the treasure.
+- The shortest path length is the number of moves, not the number of visited cells.
+- If the image is ambiguous, say so explicitly instead of guessing.
+
+First visually identify the grid and the special tiles, then solve the maze.
+
+Return the answer in this exact JSON format:
+
+{
+  "grid_size": [rows, cols],
+  "start_found": true_or_false,
+  "goal_found": true_or_false,
+  "reachable": true_or_false,
+  "shortest_path_length": integer_or_null,
+  "path": ["R","D","L","U"] or [],
+  "confidence": "high" | "medium" | "low",
+  "image_ambiguity": "none" | "minor" | "major"
+}
+
+Rules for the JSON:
+- If start or goal cannot be identified with confidence, set confidence to "low".
+- If reachable is false, set "shortest_path_length" to null and "path" to [].
+- If reachable is true, provide one valid shortest path.
+- Output JSON only, with no extra text.</pre>
+  </details>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-label">Dataset</div>
+      <div class="metric-value">10</div>
+      <div class="metric-note">Existing maze images used directly as input.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Models</div>
+      <div class="metric-value">9</div>
+      <div class="metric-note">OpenAI, Anthropic, Google Gemini, and Qwen via DashScope.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Ground Truth</div>
+      <div class="metric-value">8 + 2</div>
+      <div class="metric-note">Eight reachable mazes and two unreachable ones.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Scoring</div>
+      <div class="metric-value">Exact</div>
+      <div class="metric-note">A maze is solved only if the accepted shortest path is recovered.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     HEATMAP
+     ============================================================ -->
+<section class="section article--wide reveal" id="heatmap">
+  <div style="max-width:var(--content-w); margin:0 auto 24px;">
+    <h2 class="heading-2">Per-Maze Exact Solve Heatmap</h2>
+    <p class="prose" style="margin-bottom:8px; color:var(--ink-secondary); font-size:0.92rem; font-family:var(--font-sans);">This view keeps only the benchmark outcome that matters: did the model recover an accepted shortest path on that maze or not? There is no partial credit here.</p>
+  </div>
+  <div class="table-wrap">
+    <table class="heatmap-table" id="heatmap-table"></table>
+  </div>
+  <div class="legend article" style="max-width:var(--content-w); padding-left:0; padding-right:0;">
+    <span><span class="legend-swatch" style="background:var(--good-bg)"></span>Exact shortest path found</span>
+    <span><span class="legend-swatch" style="background:var(--bad-bg)"></span>Missed</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONCLUSION
+     ============================================================ -->
+<section class="section article reveal" id="conclusion">
+  <h2 class="heading-2">Conclusion</h2>
+  <div class="prose">
+    <p><strong>Visual grounding deserves its own evaluation slice.</strong> Coding benchmarks are not enough if the workflow depends on reading screenshots, judging layouts, or catching visual defects. This experiment is small, but it shows that visual performance can diverge sharply from coding reputation.</p>
+    <p><strong>The Claude result is the practical surprise.</strong> Claude models are strong coding tools. But on this narrow image-only task, they were weak. That matches the intuition that motivated the benchmark: some models may be strong at turning requirements into code while still lagging on direct pixel-level interpretation.</p>
+    <p><strong>The gap is not subtle.</strong> GPT-5.4 and Gemini 3.1 Pro Preview are clustered near the top, while most of the field rarely recovers the full shortest path. These mazes are visually simple for humans, so the failures here point to a real limitation in direct visual-spatial reading.</p>
+    <p><strong>And even the strongest results are still slow.</strong> The best-performing models often needed tens of seconds on mazes that a human can often scan in a handful of seconds. So the open problem is not just accuracy. It is fast, efficient visual intuition.</p>
+  </div>
+  <div class="callout callout--good">
+    <div class="callout-title">Practical takeaway</div>
+    <p>If your product loop involves simulator screenshots, UI review, or visual QA, benchmark that directly. A model can be excellent at code generation and still underperform when the task is to <em>look</em> rather than to <em>write</em>.</p>
+  </div>
+</section>
+
+<script>
+const modelResults = [
+  { id: "openai:gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, reach: 9, length: 9, strictJson: 10, schema: 10, latency: 51.06 },
+  { id: "gemini:gemini-3-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", vendorColor: "#a08b5b", solved: 8, reach: 10, length: 9, strictJson: 2, schema: 10, latency: 85.36 },
+  { id: "gemini:gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google", vendorColor: "#a08b5b", solved: 6, reach: 8, length: 6, strictJson: 0, schema: 10, latency: 76.42 },
+  { id: "dashscope:qwen3.5-flash", label: "Qwen 3.5 Flash", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 1, reach: 9, length: 1, strictJson: 10, schema: 10, latency: 51.85 },
+  { id: "anthropic:claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 1, reach: 7, length: 2, strictJson: 0, schema: 9, latency: 17.94 },
+  { id: "openai:gpt-5.1", label: "GPT-5.1", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 1, reach: 3, length: 1, strictJson: 8, schema: 6, latency: 85.39 },
+  { id: "anthropic:claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, reach: 8, length: 5, strictJson: 0, schema: 9, latency: 6.10 },
+  { id: "anthropic:claude-opus-4-6", label: "Claude Opus 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, reach: 8, length: 1, strictJson: 0, schema: 10, latency: 17.77 },
+  { id: "dashscope:qwen3.5-plus", label: "Qwen 3.5 Plus", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 0, reach: 8, length: 0, strictJson: 9, schema: 9, latency: 67.95 }
+];
+
+const mazeStates = {
+  "maze_1": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "solved",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_2": {
+    "openai:gpt-5.4": "fail",
+    "openai:gpt-5.1": "schema",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "schema",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "fail",
+    "dashscope:qwen3.5-plus": "schema",
+    "dashscope:qwen3.5-flash": "fail"
+  },
+  "maze_3": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "fail",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_4": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "fail",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_5": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "schema",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "schema",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_6": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "schema",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_7": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "schema",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "partial",
+    "gemini:gemini-3-flash-preview": "partial",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_8": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "solved",
+    "anthropic:claude-opus-4-6": "fail",
+    "anthropic:claude-sonnet-4-6": "fail",
+    "anthropic:claude-haiku-4-5-20251001": "fail",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "fail",
+    "dashscope:qwen3.5-flash": "solved"
+  },
+  "maze_9": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "partial",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "partial",
+    "gemini:gemini-3-flash-preview": "solved",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  },
+  "maze_10": {
+    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.1": "partial",
+    "anthropic:claude-opus-4-6": "partial",
+    "anthropic:claude-sonnet-4-6": "partial",
+    "anthropic:claude-haiku-4-5-20251001": "partial",
+    "gemini:gemini-3-pro-preview": "solved",
+    "gemini:gemini-3-flash-preview": "partial",
+    "dashscope:qwen3.5-plus": "partial",
+    "dashscope:qwen3.5-flash": "partial"
+  }
+};
+
+const mazes = [
+  { id: "maze_1", title: "Maze 1", image: "mazes_imgs/maze_1.jpg", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 4 },
+  { id: "maze_2", title: "Maze 2", image: "mazes_imgs/maze_2.jpg", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 1 },
+  { id: "maze_3", title: "Maze 3", image: "mazes_imgs/maze_3.png", reachable: true, shortestLength: 12, acceptedPaths: 1, solvedBy: 2 },
+  { id: "maze_4", title: "Maze 4", image: "mazes_imgs/maze_4.png", reachable: true, shortestLength: 12, acceptedPaths: 3, solvedBy: 3 },
+  { id: "maze_5", title: "Maze 5", image: "mazes_imgs/maze_5.png", reachable: true, shortestLength: 20, acceptedPaths: 2, solvedBy: 3 },
+  { id: "maze_6", title: "Maze 6", image: "mazes_imgs/maze_6.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 3 },
+  { id: "maze_7", title: "Maze 7", image: "mazes_imgs/maze_7.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 1 },
+  { id: "maze_8", title: "Maze 8", image: "mazes_imgs/maze_8.png", reachable: false, shortestLength: null, acceptedPaths: 0, solvedBy: 5 },
+  { id: "maze_9", title: "Maze 9", image: "mazes_imgs/maze_9.png", reachable: true, shortestLength: 16, acceptedPaths: 1, solvedBy: 2 },
+  { id: "maze_10", title: "Maze 10", image: "mazes_imgs/maze_10.png", reachable: true, shortestLength: 18, acceptedPaths: 2, solvedBy: 2 }
+];
+
+function esc(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function renderHorizontalBars(containerId, data, key, maxValue, axisRightLabel, formatValue = (value) => value) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let html = `<div class="hbar-chart">`;
+  html += `
+    <div class="hbar-axis">
+      <div class="hbar-axis-label">Model</div>
+      <div class="hbar-axis-domain"><span>0</span><span>${esc(axisRightLabel)}</span></div>
+      <div></div>
+    </div>
+  `;
+  data.forEach((model, index) => {
+    const pct = (model[key] / maxValue) * 100;
+    html += `
+      <div class="hbar-row">
+        <div class="hbar-label">
+          <div class="hbar-rank" style="background:${model.vendorColor}">${index + 1}</div>
+          <div class="hbar-model-info">
+            <div class="hbar-model-name">${esc(model.label)}</div>
+            <div class="hbar-vendor-name">${esc(model.vendor)}</div>
+          </div>
+        </div>
+        <div class="hbar-bar-area">
+          <div class="hbar-bar-track"></div>
+          <div class="hbar-bar" style="width:${pct}%; background:${model.vendorColor};"></div>
+        </div>
+        <div class="hbar-value">${formatValue(model[key])}</div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function heatLabel(state) {
+  return state === "solved" ? "Solved" : "Missed";
+}
+
+function heatClass(state) {
+  return state === "solved" ? "heatmap-solved" : "heatmap-fail";
+}
+
+function renderHeatmap() {
+  const table = document.getElementById("heatmap-table");
+  if (!table) return;
+  let html = `<thead><tr><th>Maze</th>`;
+  modelResults.forEach((model) => {
+    html += `<th>${esc(model.label)}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+  mazes.forEach((maze) => {
+    html += `<tr><td><strong>${esc(maze.title)}</strong></td>`;
+    modelResults.forEach((model) => {
+      const state = mazeStates[maze.id][model.id];
+      html += `<td class="heatmap-cell ${heatClass(state)}">${heatLabel(state)}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  table.innerHTML = html;
+}
+
+function renderGallery() {
+  const root = document.getElementById("hero-maze-grid");
+  if (!root) return;
+  let html = "";
+  mazes.forEach((maze) => {
+    const fillPct = (maze.solvedBy / modelResults.length) * 100;
+    const statusClass = maze.reachable ? "maze-status--reachable" : "maze-status--blocked";
+    const statusLabel = maze.reachable ? "Reachable" : "Blocked";
+    const lengthLabel = maze.reachable ? `${maze.shortestLength} moves` : "Not reachable";
+    const pathLabel = maze.acceptedPaths ? `${maze.acceptedPaths} accepted shortest ${maze.acceptedPaths === 1 ? "path" : "paths"}` : "No accepted paths";
+    html += `
+      <article class="maze-card">
+        <img src="${maze.image}" alt="${esc(maze.title)}">
+        <div class="maze-card-body">
+          <div class="maze-card-title">
+            <strong>${esc(maze.title)}</strong>
+            <span class="maze-status ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="maze-card-meta">
+            <div><strong>Ground truth:</strong> ${lengthLabel}</div>
+            <div><strong>Annotations:</strong> ${pathLabel}</div>
+          </div>
+          <div class="maze-meter">
+            <div class="maze-meter-head"><span>Solved by models</span><span>${maze.solvedBy} / ${modelResults.length}</span></div>
+            <div class="mini-track"><div class="mini-fill" style="width:${fillPct}%; background:var(--accent);"></div></div>
+          </div>
+        </div>
+      </article>
+    `;
+  });
+  root.innerHTML = html;
+}
+
+function renderSolveTierCallout() {
+  const root = document.getElementById("callout-solve-tiers");
+  if (!root) return;
+  root.innerHTML = `
+    <div class="callout">
+      <div class="callout-title">What the ranking says</div>
+      <p><strong>Tier 1:</strong> GPT-5.4 and Gemini 3.1 Pro actually recover shortest paths at high rates. These are the only models that looked consistently strong on the full task.</p>
+      <p><strong>Tier 2:</strong> Gemini 3 Flash sits in the middle. It solves enough mazes to look capable, but it is clearly not at the same level as the top two.</p>
+      <p><strong>Tier 3:</strong> Claude and Qwen mostly fail on the benchmark&rsquo;s only target metric: recovering the accepted shortest path from the image itself.</p>
+    </div>
+  `;
+}
+
+function initReveal() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) entry.target.classList.add("visible");
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll(".reveal").forEach((el) => obs.observe(el));
+}
+
+function initToc() {
+  const links = Array.from(document.querySelectorAll("#toc .toc-link"));
+  const sections = links
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const id = "#" + entry.target.id;
+      links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === id));
+    });
+  }, { rootMargin: "-30% 0px -55% 0px", threshold: 0 });
+
+  sections.forEach((section) => obs.observe(section));
+}
+
+renderHorizontalBars("chart-solves", modelResults, "solved", 10, "10 solved");
+renderHorizontalBars("chart-latency", modelResults, "latency", 90, "90s", (value) => `${value.toFixed(1)}s`);
+renderHeatmap();
+renderGallery();
+renderSolveTierCallout();
+initReveal();
+initToc();
+</script>
+</body>
+</html>
