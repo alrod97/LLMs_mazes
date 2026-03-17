@@ -996,8 +996,8 @@ Rules for the JSON:
     </div>
     <div class="metric-card">
       <div class="metric-label">Model Runs</div>
-      <div class="metric-value">10</div>
-      <div class="metric-note">Nine base models plus one GPT-5.4 no-thinking ablation.</div>
+      <div class="metric-value">11</div>
+      <div class="metric-note">Nine base models plus two GPT-5.4 reasoning ablations.</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Ground Truth</div>
@@ -1018,7 +1018,7 @@ Rules for the JSON:
   <h2 class="heading-2">Main Results</h2>
   <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
     <p>This benchmark asks one thing only: from the maze image alone, did the model recover the <strong>correct shortest path</strong> to the treasure? A maze counts as solved only if reachability, shortest-path length, and the returned shortest path are all correct.</p>
-    <p>After rerunning the Claude family with Anthropic&rsquo;s exposed thinking controls, the headline still holds. The strongest model in the benchmark was <strong>GPT-5.4</strong>, which solved <strong>9 of 10</strong> mazes exactly. <strong>Gemini 3.1 Pro Preview</strong> was close behind at <strong>8 of 10</strong>, and <strong>Gemini 3 Flash</strong> remained the only other model with a clearly positive score at <strong>6 of 10</strong>.</p>
+    <p>After rerunning the Claude family with Anthropic&rsquo;s exposed thinking controls, the headline still holds. The strongest configuration in the benchmark was <strong>GPT-5.4 at medium reasoning</strong>, which solved <strong>9 of 10</strong> mazes exactly. <strong>GPT-5.4 at high reasoning</strong> also reached <strong>9 of 10</strong>, but only by taking substantially longer. <strong>Gemini 3.1 Pro Preview</strong> was close behind at <strong>8 of 10</strong>, and <strong>Gemini 3 Flash</strong> remained the only other model with a clearly positive score at <strong>6 of 10</strong>.</p>
     <p>The Claude rerun makes the comparison fairer, but it does not change the practical picture. <strong>Claude Opus 4.6</strong> improved to <strong>2 of 10</strong> under adaptive <code>medium</code> thinking. <strong>Claude Sonnet 4.6</strong> still solved <strong>0 of 10</strong>, with <strong>maze 8</strong> failing to return after more than <strong>16 minutes</strong> and being counted as a miss. <strong>Claude Haiku 4.5</strong> at <code>budget_tokens=4096</code> also solved <strong>0 of 10</strong>.</p>
     <p>The clearest clue came from an ablation on the winning model itself. When I reran <strong>GPT-5.4</strong> with <code>reasoning.effort=&quot;none&quot;</code>, exact solves collapsed from <strong>9 of 10</strong> to <strong>0 of 10</strong>. The model stayed fast and well formatted, but it no longer recovered the actual routes. That does not prove literal brute force, but it is strongly consistent with a system that still needs serial deliberate search rather than fast visual intuition.</p>
     <p>That is the practical point of the experiment. Strong code generation does not automatically imply strong visual understanding. If a model has to look at pixels, recover spatial structure, and judge what is actually on the screen, that appears to be a separate capability.</p>
@@ -1028,8 +1028,8 @@ Rules for the JSON:
     <div id="chart-solves"></div>
   </div>
   <div class="callout callout--good" style="max-width:var(--content-w); margin:28px auto 0;">
-    <div class="callout-title">Reasoning ablation: same model, same mazes, thinking off</div>
-    <p>To test whether the top result reflected fast visual understanding or slower deliberate search, I reran the full benchmark on <strong>GPT-5.4</strong> with <code>reasoning.effort=&quot;none&quot;</code>. The result was stark: the model went from <strong>9 of 10</strong> exact solves to <strong>0 of 10</strong>, while average latency fell from <strong>51.1 seconds</strong> to <strong>4.2 seconds</strong>.</p>
+    <div class="callout-title">GPT-5.4 reasoning sweep: medium wins on the tradeoff</div>
+    <p>To test whether the top result reflected fast visual understanding or slower deliberate search, I reran the full benchmark on <strong>GPT-5.4</strong> at three settings. <code>none</code> collapsed to <strong>0 of 10</strong>. <code>high</code> recovered <strong>9 of 10</strong>, but was much slower than <code>medium</code>. So the evidence points in the same direction: better results come from more deliberate reasoning, not from fast visual intuition.</p>
     <div class="metric-grid" style="margin-top:18px;">
       <div class="metric-card">
         <div class="metric-label">GPT-5.4 medium</div>
@@ -1039,6 +1039,16 @@ Rules for the JSON:
       <div class="metric-card">
         <div class="metric-label">GPT-5.4 medium</div>
         <div class="metric-value">51.1s</div>
+        <div class="metric-note">Average response time per maze.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">GPT-5.4 high</div>
+        <div class="metric-value">9 / 10</div>
+        <div class="metric-note">Exact shortest-path solves.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">GPT-5.4 high</div>
+        <div class="metric-value">74.2s</div>
         <div class="metric-note">Average response time per maze.</div>
       </div>
       <div class="metric-card">
@@ -1052,7 +1062,7 @@ Rules for the JSON:
         <div class="metric-note">Average response time per maze.</div>
       </div>
     </div>
-    <p style="margin-top:16px;">The model becomes fast, but not visually competent. That is exactly the pattern you would expect if the current success comes from token-heavy reasoning over a reconstructed scene, not from immediate spatial understanding.</p>
+    <p style="margin-top:16px;"><code>Medium</code> is the sweet spot here. Turning reasoning off makes the model fast but visually incompetent. Turning it up to <code>high</code> does not improve the score over <code>medium</code>; it just makes the run slower.</p>
   </div>
   <div style="max-width:var(--content-w); margin:32px auto 0;" id="callout-solve-tiers"></div>
   <div class="callout callout--neutral" style="max-width:var(--content-w); margin:28px auto 0;">
@@ -1085,8 +1095,8 @@ Rules for the JSON:
 <section class="section article--wide reveal" id="latency">
   <h2 class="heading-2">Latency: Correct Does Not Mean Fast</h2>
   <div class="prose article" style="padding-left:0; padding-right:0; max-width:var(--content-w);">
-    <p>The strongest models were not fast. <strong>GPT-5.4</strong> averaged about <strong>51 seconds</strong> per maze, while <strong>Gemini 3.1 Pro Preview</strong> averaged about <strong>83 seconds</strong>. Even <strong>Gemini 3 Flash</strong>, which is clearly weaker than the top two, still averaged about <strong>76 seconds</strong>.</p>
-    <p>The GPT-5.4 ablation makes the tradeoff even clearer. With reasoning set to <code>medium</code>, it solved <strong>9 of 10</strong> mazes at about <strong>51 seconds</strong> per maze. With reasoning set to <code>none</code>, it dropped to <strong>0 of 10</strong> exact solves but sped up to about <strong>4.2 seconds</strong>. So the current system is not simply seeing the right route immediately and then describing it. It appears to need the extra reasoning budget to construct the answer.</p>
+    <p>The strongest models were not fast. <strong>GPT-5.4 at medium</strong> averaged about <strong>51 seconds</strong> per maze, while <strong>GPT-5.4 at high</strong> rose to about <strong>74 seconds</strong>. <strong>Gemini 3.1 Pro Preview</strong> averaged about <strong>83 seconds</strong>, and even <strong>Gemini 3 Flash</strong>, which is clearly weaker than the top two, still averaged about <strong>76 seconds</strong>.</p>
+    <p>The GPT-5.4 sweep makes the tradeoff even clearer. With reasoning set to <code>medium</code>, it solved <strong>9 of 10</strong> mazes at about <strong>51.1 seconds</strong> per maze. With reasoning set to <code>high</code>, it still solved only <strong>9 of 10</strong>, but slowed to about <strong>74.2 seconds</strong>. With reasoning set to <code>none</code>, it dropped to <strong>0 of 10</strong> exact solves but sped up to about <strong>4.2 seconds</strong>. So the current system is not simply seeing the right route immediately and then describing it. It appears to need the extra reasoning budget to construct the answer.</p>
     <p>That matters because a human looking at these mazes often gets a strong intuition for the route within a few seconds. So the gap is not only about <em>whether</em> a model reaches the right answer. It is also about <em>how</em> it reaches it. Current systems still look comparatively serial and token-heavy, rather than showing the kind of fast visual intuition we would want from more advanced AI systems.</p>
     <p>The Claude reruns reinforce that point rather than weakening it. <strong>Claude Sonnet 4.6</strong> took roughly <strong>130 to 170 seconds</strong> on mazes 7, 9, and 10, and still never returned maze 8 after more than <strong>16 minutes</strong>. <strong>Claude Opus 4.6</strong> completed all ten mazes under adaptive <code>medium</code>, but the combined run stalled before flushing a full latency summary, so I exclude its average from the chart below instead of inventing one.</p>
     <p>This is part of why the benchmark feels revealing. Even the best-performing models often look like they are reconstructing the puzzle step by step rather than understanding it holistically. A future system should not only solve these mazes reliably, but do so with much less deliberation.</p>
@@ -1183,7 +1193,7 @@ Rules for the JSON:
   <div class="prose">
     <p><strong>Visual grounding deserves its own evaluation slice.</strong> Coding benchmarks are not enough if the workflow depends on reading screenshots, judging layouts, or catching visual defects. This experiment is small, but it shows that visual performance can diverge sharply from coding reputation.</p>
     <p><strong>The Claude rerun did not rescue the family.</strong> Making the comparison fairer was important, so I reran Claude with Anthropic&rsquo;s exposed thinking controls. That improved <strong>Claude Opus 4.6</strong> to <strong>2 of 10</strong>, but <strong>Claude Sonnet 4.6</strong> still failed across the board and one maze never returned at all. So the headline of the benchmark survives the fairer setup.</p>
-    <p><strong>The GPT-5.4 ablation is the strongest clue.</strong> When I turned reasoning off, the same model dropped from <strong>9 of 10</strong> exact solves to <strong>0 of 10</strong>, while latency fell from <strong>51.1 seconds</strong> to <strong>4.2 seconds</strong>. That does not prove literal brute force, but it strongly supports the broader picture from the visible reasoning traces: the model seems to need serial, deliberate search to recover the route.</p>
+    <p><strong>The GPT-5.4 reasoning sweep is the strongest clue.</strong> At <code>medium</code>, the model solved <strong>9 of 10</strong> mazes. At <code>high</code>, it still solved <strong>9 of 10</strong>, but slower. At <code>none</code>, it fell to <strong>0 of 10</strong> while latency dropped from <strong>51.1 seconds</strong> to <strong>4.2 seconds</strong>. That does not prove literal brute force, but it strongly supports the broader picture from the visible reasoning traces: the model seems to need serial, deliberate search to recover the route.</p>
     <p><strong>The gap is not subtle.</strong> GPT-5.4 and Gemini 3.1 Pro Preview are still clustered near the top, while most of the field rarely recovers the full shortest path. These mazes are visually simple for humans, so the failures here point to a real limitation in direct visual-spatial reading.</p>
     <p><strong>And even the strongest results are still slow.</strong> The best-performing models often needed tens of seconds on mazes that a human can often scan in a handful of seconds. So the open problem is not just accuracy. It is fast, efficient visual intuition.</p>
   </div>
@@ -1196,6 +1206,7 @@ Rules for the JSON:
 <script>
 const modelResults = [
   { id: "openai:gpt-5.4:medium", label: "GPT-5.4 (medium)", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, latency: 51.06 },
+  { id: "openai:gpt-5.4:high", label: "GPT-5.4 (high)", vendor: "OpenAI", vendorColor: "#2f6788", solved: 9, latency: 74.2 },
   { id: "gemini:gemini-3-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", vendorColor: "#a08b5b", solved: 8, latency: 82.75 },
   { id: "gemini:gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google", vendorColor: "#a08b5b", solved: 6, latency: 76.18 },
   { id: "anthropic:claude-opus-4-6", label: "Claude Opus 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 2, latency: null },
@@ -1214,6 +1225,7 @@ const latencyResults = modelResults
 const mazeStates = {
   "maze_1": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "solved",
@@ -1226,6 +1238,7 @@ const mazeStates = {
   },
   "maze_2": {
     "openai:gpt-5.4:medium": "fail",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1238,6 +1251,7 @@ const mazeStates = {
   },
   "maze_3": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1250,6 +1264,7 @@ const mazeStates = {
   },
   "maze_4": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1262,6 +1277,7 @@ const mazeStates = {
   },
   "maze_5": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1274,6 +1290,7 @@ const mazeStates = {
   },
   "maze_6": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "fail",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1286,6 +1303,7 @@ const mazeStates = {
   },
   "maze_7": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1298,6 +1316,7 @@ const mazeStates = {
   },
   "maze_8": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "solved",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "solved",
@@ -1310,6 +1329,7 @@ const mazeStates = {
   },
   "maze_9": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1322,6 +1342,7 @@ const mazeStates = {
   },
   "maze_10": {
     "openai:gpt-5.4:medium": "solved",
+    "openai:gpt-5.4:high": "solved",
     "openai:gpt-5.1": "fail",
     "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
@@ -1421,7 +1442,8 @@ function renderGallery() {
   if (!root) return;
   let html = "";
   mazes.forEach((maze) => {
-    const fillPct = (maze.solvedBy / modelResults.length) * 100;
+    const solvedBy = modelResults.filter((model) => mazeStates[maze.id]?.[model.id] === "solved").length;
+    const fillPct = (solvedBy / modelResults.length) * 100;
     const statusClass = maze.reachable ? "maze-status--reachable" : "maze-status--blocked";
     const statusLabel = maze.reachable ? "Reachable" : "Blocked";
     const lengthLabel = maze.reachable ? `${maze.shortestLength} moves` : "Not reachable";
@@ -1439,7 +1461,7 @@ function renderGallery() {
             <div><strong>Annotations:</strong> ${pathLabel}</div>
           </div>
           <div class="maze-meter">
-            <div class="maze-meter-head"><span>Solved by models</span><span>${maze.solvedBy} / ${modelResults.length}</span></div>
+            <div class="maze-meter-head"><span>Solved by models</span><span>${solvedBy} / ${modelResults.length}</span></div>
             <div class="mini-track"><div class="mini-fill" style="width:${fillPct}%; background:var(--accent);"></div></div>
           </div>
         </div>
@@ -1455,8 +1477,8 @@ function renderSolveTierCallout() {
   root.innerHTML = `
     <div class="callout">
       <div class="callout-title">What the ranking says</div>
-      <p><strong>Tier 1:</strong> GPT-5.4 <code>medium</code> and Gemini 3.1 Pro actually recover shortest paths at high rates. These are the only models that looked consistently strong on the full task.</p>
-      <p><strong>Tier 2:</strong> Gemini 3 Flash sits in the middle. It solves enough mazes to look capable, but it is clearly not at the same level as the top two.</p>
+      <p><strong>Tier 1:</strong> GPT-5.4 <code>medium</code> and GPT-5.4 <code>high</code> both reach 9 of 10, but <code>medium</code> is clearly the better tradeoff. Gemini 3.1 Pro is next at 8 of 10.</p>
+      <p><strong>Tier 2:</strong> Gemini 3 Flash sits in the middle. It solves enough mazes to look capable, but it is clearly not at the same level as the top group.</p>
       <p><strong>Tier 3:</strong> Claude Opus 4.6 improves under adaptive <code>medium</code>, but only to 2 of 10. GPT-5.1 and Qwen 3.5 Flash each solve just 1 of 10.</p>
       <p><strong>Tier 4:</strong> GPT-5.4 <code>none</code>, Claude Sonnet 4.6, Claude Haiku 4.5, and Qwen 3.5 Plus do not recover a single accepted shortest path in this setup.</p>
     </div>
