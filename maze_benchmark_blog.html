@@ -995,9 +995,9 @@ Rules for the JSON:
       <div class="metric-note">Existing maze images used directly as input.</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Models</div>
-      <div class="metric-value">9</div>
-      <div class="metric-note">OpenAI, Anthropic, Google Gemini, and Qwen via DashScope.</div>
+      <div class="metric-label">Model Runs</div>
+      <div class="metric-value">10</div>
+      <div class="metric-note">Nine base models plus one GPT-5.4 no-thinking ablation.</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Ground Truth</div>
@@ -1195,12 +1195,13 @@ Rules for the JSON:
 
 <script>
 const modelResults = [
-  { id: "openai:gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, latency: 51.06 },
+  { id: "openai:gpt-5.4:medium", label: "GPT-5.4 (medium)", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 9, latency: 51.06 },
   { id: "gemini:gemini-3-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", vendorColor: "#a08b5b", solved: 8, latency: 82.75 },
   { id: "gemini:gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google", vendorColor: "#a08b5b", solved: 6, latency: 76.18 },
   { id: "anthropic:claude-opus-4-6", label: "Claude Opus 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 2, latency: null },
   { id: "dashscope:qwen3.5-flash", label: "Qwen 3.5 Flash", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 1, latency: 51.85 },
   { id: "openai:gpt-5.1", label: "GPT-5.1", vendor: "OpenAI", vendorColor: "#3d7a9e", solved: 1, latency: 85.39 },
+  { id: "openai:gpt-5.4:none", label: "GPT-5.4 (none)", vendor: "OpenAI", vendorColor: "#7aa8c4", solved: 0, latency: 4.24 },
   { id: "anthropic:claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, latency: null },
   { id: "anthropic:claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", vendor: "Anthropic", vendorColor: "#c94a3a", solved: 0, latency: 17.51 },
   { id: "dashscope:qwen3.5-plus", label: "Qwen 3.5 Plus", vendor: "Alibaba / Qwen", vendorColor: "#2f7f69", solved: 0, latency: 67.95 }
@@ -1212,8 +1213,9 @@ const latencyResults = modelResults
 
 const mazeStates = {
   "maze_1": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "solved",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1223,8 +1225,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_2": {
-    "openai:gpt-5.4": "fail",
+    "openai:gpt-5.4:medium": "fail",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1234,8 +1237,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_3": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1245,8 +1249,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_4": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1256,8 +1261,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_5": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1267,8 +1273,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_6": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1278,8 +1285,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_7": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1289,8 +1297,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_8": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "solved",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "solved",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1300,8 +1309,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "solved"
   },
   "maze_9": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1311,8 +1321,9 @@ const mazeStates = {
     "dashscope:qwen3.5-flash": "fail"
   },
   "maze_10": {
-    "openai:gpt-5.4": "solved",
+    "openai:gpt-5.4:medium": "solved",
     "openai:gpt-5.1": "fail",
+    "openai:gpt-5.4:none": "fail",
     "anthropic:claude-opus-4-6": "fail",
     "anthropic:claude-sonnet-4-6": "fail",
     "anthropic:claude-haiku-4-5-20251001": "fail",
@@ -1444,10 +1455,10 @@ function renderSolveTierCallout() {
   root.innerHTML = `
     <div class="callout">
       <div class="callout-title">What the ranking says</div>
-      <p><strong>Tier 1:</strong> GPT-5.4 and Gemini 3.1 Pro actually recover shortest paths at high rates. These are the only models that looked consistently strong on the full task.</p>
+      <p><strong>Tier 1:</strong> GPT-5.4 <code>medium</code> and Gemini 3.1 Pro actually recover shortest paths at high rates. These are the only models that looked consistently strong on the full task.</p>
       <p><strong>Tier 2:</strong> Gemini 3 Flash sits in the middle. It solves enough mazes to look capable, but it is clearly not at the same level as the top two.</p>
       <p><strong>Tier 3:</strong> Claude Opus 4.6 improves under adaptive <code>medium</code>, but only to 2 of 10. GPT-5.1 and Qwen 3.5 Flash each solve just 1 of 10.</p>
-      <p><strong>Tier 4:</strong> Claude Sonnet 4.6, Claude Haiku 4.5, and Qwen 3.5 Plus still do not recover a single accepted shortest path in the fairer rerun.</p>
+      <p><strong>Tier 4:</strong> GPT-5.4 <code>none</code>, Claude Sonnet 4.6, Claude Haiku 4.5, and Qwen 3.5 Plus do not recover a single accepted shortest path in this setup.</p>
     </div>
   `;
 }
