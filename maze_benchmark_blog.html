@@ -7,11 +7,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+(() => {
+  try {
+    const savedTheme = localStorage.getItem("maze-benchmark-theme");
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = savedTheme || (prefersDark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  } catch (error) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
 <style>
 /* ================================================================
    CSS CUSTOM PROPERTIES
    ================================================================ */
 :root {
+  color-scheme: light;
   --bg: #faf9f5;
   --bg-warm: #f5f0e8;
   --paper: #ffffff;
@@ -35,6 +48,25 @@
   --chart-teal: #2f7f69;
   --code-bg: #1e1e1e;
   --code-fg: #d4d4d4;
+  --inline-code-bg: rgba(0, 0, 0, 0.04);
+  --shadow-soft: 0 8px 22px rgba(31, 25, 19, 0.06);
+  --image-border: #e3ddd3;
+  --chart-rule: #e0dbd2;
+  --chart-row-border: #eae5da;
+  --row-hover: rgba(217,119,87,.04);
+  --row-alt: rgba(245,240,232,.45);
+  --row-alt-hover: rgba(217,119,87,.06);
+  --vendor-muted: #9a938a;
+  --bar-track: #f0ece4;
+  --mini-track-bg: #efe9de;
+  --table-bg: #ffffff;
+  --table-head-bg: #faf4ec;
+  --table-head-ink: #554d45;
+  --table-row-border: #ece3d7;
+  --maze-img-bg: #f4efe7;
+  --toggle-bg: rgba(255,255,255,0.82);
+  --toggle-shadow: 0 10px 28px rgba(31, 25, 19, 0.12);
+  --toggle-hover: rgba(245,240,232,0.95);
 
   --font-serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-sans: 'Inter', -apple-system, 'Segoe UI', Helvetica, sans-serif;
@@ -45,6 +77,52 @@
   --section-gap: 72px;
   --para-gap: 22px;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #13100e;
+  --bg-warm: #1a1613;
+  --paper: #1c1815;
+  --ink: #f3ede4;
+  --ink-secondary: #cabfb3;
+  --ink-tertiary: #9d9083;
+  --border: #312923;
+  --border-strong: #4a3f37;
+  --accent: #f0976e;
+  --accent-soft: #241915;
+  --accent-dark: #ffb48d;
+  --good: #6ccc99;
+  --good-bg: #14231c;
+  --bad: #f07f71;
+  --bad-bg: #2a1714;
+  --neutral: #8fb5c8;
+  --neutral-bg: #162029;
+  --chart-blue: #65a0c7;
+  --chart-purple: #998ac2;
+  --chart-gold: #c2a970;
+  --chart-teal: #44a689;
+  --code-bg: #0f1011;
+  --code-fg: #efe9e1;
+  --inline-code-bg: rgba(255, 255, 255, 0.08);
+  --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --image-border: #3d332c;
+  --chart-rule: #3a312a;
+  --chart-row-border: #2d2621;
+  --row-hover: rgba(240,151,110,.08);
+  --row-alt: rgba(255,255,255,.03);
+  --row-alt-hover: rgba(240,151,110,.11);
+  --vendor-muted: #b7aa9c;
+  --bar-track: #2a231e;
+  --mini-track-bg: #2a231e;
+  --table-bg: #1d1916;
+  --table-head-bg: #241d18;
+  --table-head-ink: #d6c5b7;
+  --table-row-border: #352c25;
+  --maze-img-bg: #231d18;
+  --toggle-bg: rgba(24, 20, 17, 0.88);
+  --toggle-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  --toggle-hover: rgba(36, 29, 24, 0.98);
 }
 
 /* ================================================================
@@ -59,6 +137,7 @@ body {
   font-size: 19px;
   line-height: 1.72;
   overflow-x: hidden;
+  transition: background-color .25s ease, color .25s ease;
 }
 a { color: var(--accent-dark); text-decoration-color: var(--border-strong); text-underline-offset: 3px; transition: color .2s; }
 a:hover { color: var(--accent); }
@@ -66,7 +145,7 @@ img { max-width: 100%; display: block; }
 code {
   font-family: var(--font-mono);
   font-size: 0.88em;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--inline-code-bg);
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
@@ -275,7 +354,7 @@ code {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--paper);
-  box-shadow: 0 8px 22px rgba(31, 25, 19, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 .thesis-paragraph {
   font-family: var(--font-sans);
@@ -291,7 +370,7 @@ code {
 .paper-figure img {
   width: 100%;
   height: auto;
-  border: 1px solid #e3ddd3;
+  border: 1px solid var(--image-border);
   border-radius: 10px;
   background: var(--bg-warm);
 }
@@ -349,7 +428,7 @@ code {
   align-items: center;
   gap: 16px;
   padding: 0 0 10px;
-  border-bottom: 1.5px solid #e0dbd2;
+  border-bottom: 1.5px solid var(--chart-rule);
   margin-bottom: 6px;
   font-size: 0.82rem;
   font-weight: 600;
@@ -369,12 +448,12 @@ code {
   align-items: center;
   gap: 16px;
   padding: 14px 0;
-  border-bottom: 1px solid #eae5da;
+  border-bottom: 1px solid var(--chart-row-border);
   transition: background .15s;
 }
-.hbar-row:hover { background: rgba(217,119,87,.04); }
-.hbar-row:nth-child(even) { background: rgba(245,240,232,.45); }
-.hbar-row:nth-child(even):hover { background: rgba(217,119,87,.06); }
+.hbar-row:hover { background: var(--row-hover); }
+.hbar-row:nth-child(even) { background: var(--row-alt); }
+.hbar-row:nth-child(even):hover { background: var(--row-alt-hover); }
 .hbar-label {
   display: flex;
   align-items: center;
@@ -406,7 +485,7 @@ code {
 .hbar-vendor-name {
   font-size: 0.78rem;
   font-weight: 400;
-  color: #9a938a;
+  color: var(--vendor-muted);
   line-height: 1.3;
   margin-top: 1px;
 }
@@ -418,7 +497,7 @@ code {
   position: absolute;
   top: 0;
   height: 100%;
-  background: #f0ece4;
+  background: var(--bar-track);
   border-radius: 6px;
   width: 100%;
 }
@@ -482,7 +561,7 @@ code {
 }
 .mini-track {
   height: 10px;
-  background: #efe9de;
+  background: var(--mini-track-bg);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -544,9 +623,9 @@ code {
   border-radius: 12px;
   background: var(--paper);
 }
-table { width: 100%; border-collapse: collapse; background: white; min-width: 860px; }
-th, td { border-bottom: 1px solid #ece3d7; padding: 8px 10px; text-align: left; font-size: 13px; font-family: var(--font-sans); }
-th { background: #faf4ec; color: #554d45; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
+table { width: 100%; border-collapse: collapse; background: var(--table-bg); min-width: 860px; }
+th, td { border-bottom: 1px solid var(--table-row-border); padding: 8px 10px; text-align: left; font-size: 13px; font-family: var(--font-sans); }
+th { background: var(--table-head-bg); color: var(--table-head-ink); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
 tr:last-child td { border-bottom: none; }
 .table-num { text-align: right; font-variant-numeric: tabular-nums; }
 .score-badge {
@@ -605,7 +684,7 @@ tr:last-child td { border-bottom: none; }
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  background: #f4efe7;
+  background: var(--maze-img-bg);
 }
 .maze-card-body {
   padding: 12px;
@@ -779,7 +858,7 @@ tr:last-child td { border-bottom: none; }
   border-radius: 14px;
   background: var(--paper);
   padding: 12px;
-  box-shadow: 0 8px 22px rgba(31, 25, 19, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 .screenshot-kicker {
   font-family: var(--font-sans);
@@ -793,9 +872,44 @@ tr:last-child td { border-bottom: none; }
 .screenshot-card img {
   width: 100%;
   height: auto;
-  border: 1px solid #e3ddd3;
+  border: 1px solid var(--image-border);
   border-radius: 10px;
   background: var(--bg-warm);
+}
+
+/* ================================================================
+   THEME TOGGLE
+   ================================================================ */
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 140;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--toggle-bg);
+  box-shadow: var(--toggle-shadow);
+  color: var(--ink);
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.theme-toggle:hover {
+  background: var(--toggle-hover);
+  transform: translateY(-1px);
+}
+.theme-toggle__icon {
+  width: 1.2rem;
+  text-align: center;
+  color: var(--accent-dark);
 }
 .screenshot-caption {
   margin-top: 10px;
@@ -871,6 +985,12 @@ tr:last-child td { border-bottom: none; }
   :root { --section-gap: 48px; }
   .article, .article--wide { padding: 0 18px; }
   .hero { padding-top: 48px; }
+  .theme-toggle {
+    top: 12px;
+    right: 12px;
+    padding: 9px 12px;
+    font-size: 0.74rem;
+  }
   .paper-figure { padding: 10px; border-radius: 10px; }
   .maze-collage { grid-template-columns: 1fr; }
   .case-strip, .screenshot-grid, .screenshot-grid--three { grid-template-columns: 1fr; }
@@ -888,6 +1008,11 @@ tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
+
+<button class="theme-toggle" type="button" id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+  <span class="theme-toggle__icon" data-theme-icon aria-hidden="true">☾</span>
+  <span data-theme-label>Dark mode</span>
+</button>
 
 <!-- ============================================================
      TABLE OF CONTENTS
@@ -1511,11 +1636,39 @@ function initToc() {
   sections.forEach((section) => obs.observe(section));
 }
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const button = document.getElementById("theme-toggle");
+  if (!button) return;
+  const dark = theme === "dark";
+  button.setAttribute("aria-pressed", dark ? "true" : "false");
+  const label = button.querySelector("[data-theme-label]");
+  const icon = button.querySelector("[data-theme-icon]");
+  if (label) label.textContent = dark ? "Light mode" : "Dark mode";
+  if (icon) icon.textContent = dark ? "☀︎" : "☾";
+}
+
+function initThemeToggle() {
+  const button = document.getElementById("theme-toggle");
+  if (!button) return;
+  applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light");
+  button.addEventListener("click", () => {
+    const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    try {
+      localStorage.setItem("maze-benchmark-theme", nextTheme);
+    } catch (error) {
+      /* ignore storage errors */
+    }
+  });
+}
+
 renderHorizontalBars("chart-solves", modelResults, "solved", 10, "10 solved");
 renderHorizontalBars("chart-latency", latencyResults, "latency", 90, "90s", (value) => `${value.toFixed(1)}s`);
 renderHeatmap();
 renderGallery();
 renderSolveTierCallout();
+initThemeToggle();
 initReveal();
 initToc();
 </script>
