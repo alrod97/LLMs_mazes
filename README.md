@@ -1,16 +1,34 @@
-# Visual Maze Benchmark
+# MazeBench: Visual Maze Reasoning for Multimodal LLMs
 
-This repository contains a small benchmark for visually grounded maze reasoning with multimodal models. Each model receives only a maze image and a fixed prompt, then must decide whether the treasure is reachable and, if so, return one valid shortest path in JSON.
+<p align="center">
+  <img src="paper/fig_hero.png" alt="MazeBench: maze examples at increasing difficulty (left) and token efficiency scatter across frontier models (right)" width="100%">
+</p>
 
-The dataset is the image folder itself. There is no symbolic matrix input, no generated mazes, and no hidden solver inside the model call.
+<p align="center">
+  <b>Left:</b> Mazes from MazeBench at increasing difficulty (5x5 to 20x20). <b>Right:</b> Solve rate vs. total tokens consumed across frontier models.
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2603.26839"><img src="https://img.shields.io/badge/arXiv-2603.26839-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://huggingface.co/datasets/albertoRodriguez97/MazeBench"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-MazeBench-yellow" alt="HuggingFace"></a>
+  <a href="https://alrod97.github.io/LLMs_mazes/maze_benchmark_blog.html"><img src="https://img.shields.io/badge/Blog-Post-blue" alt="Blog"></a>
+</p>
+
+This repository contains MazeBench, a benchmark and dataset for visually grounded maze reasoning with multimodal models. Each model receives only a maze image and a fixed prompt, then must decide whether the treasure is reachable and, if so, return one valid shortest path in JSON.
+
+**Paper:** [From Pixels to BFS: High Maze Accuracy Does Not Imply Visual Planning](https://arxiv.org/abs/2603.26839)
+
+**Blog post:** [maze_benchmark_blog.html](https://alrod97.github.io/LLMs_mazes/maze_benchmark_blog.html) (the original 10-maze experiment)
+
+**Dataset:** [Hugging Face Hub](https://huggingface.co/datasets/albertoRodriguez97/MazeBench)
 
 ## What Is Included
 
-- `benchmark/`: the benchmark runner, prompt, adapters, parser, validation, and scoring helpers
-- `mazes_imgs/`: the 10 maze images used as the dataset
-- `benchmark/ground_truth/maze_annotations.json`: manually curated shortest-path annotations used for scoring
-- `maze_benchmark_blog.html`: the write-up for the experiment
-- `index.html`: a simple redirect so the post is GitHub Pages-friendly
+- `benchmark/` — benchmark runner, prompt, provider adapters, parser, validation, and scoring
+- `scripts/maze_generator/` — procedural maze generator with sprite rendering and annotation
+- `paper/` — LaTeX source and figures for the arXiv paper
+- `mazes_imgs/` — the 10 hand-curated maze images from the blog post
+- `acl-style-files/` — ACL LaTeX formatting templates
 
 ## Benchmark Design
 
@@ -47,18 +65,22 @@ benchmark/
     results_writer.py
     validators.py
   outputs/
+scripts/
+  maze_generator/        # procedural maze generation
+paper/
+  maze_benchmark.tex     # LaTeX source
+  maze_benchmark.pdf     # compiled paper
+  references.bib
+  *.png                  # figures
+acl-style-files/         # ACL formatting templates
 mazes_imgs/
-  maze_1.jpg
-  ...
-maze_benchmark_blog.html
-index.html
-README.md
+  maze_1.jpg ... maze_10.png
 ```
 
 ## Requirements
 
 - Python 3.10+
-- standard library only
+- Standard library only for the benchmark runner
 - API keys via environment variables when running live models:
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY`
@@ -119,8 +141,6 @@ python3 -m benchmark.main \
 
 Google:
 
-The API ids below correspond to the Gemini 3.1 Pro Preview and Gemini 3 Flash runs used in the write-up.
-
 ```bash
 python3 -m benchmark.main \
   --model gemini:gemini-3-pro-preview \
@@ -146,9 +166,34 @@ python3 -m benchmark.main \
   --maze-name maze_2
 ```
 
+## Dataset
+
+The 110-maze evaluation set from the paper is hosted on [Hugging Face](https://huggingface.co/datasets/albertoRodriguez97/MazeBench). It spans 8 structural families and grid sizes from 5x5 to 20x20, with ground-truth shortest-path annotations.
+
+### Download
+
+```bash
+pip install huggingface_hub
+huggingface-cli download albertoRodriguez97/MazeBench --repo-type dataset --local-dir generated_mazes/
+```
+
+Contents: 110 maze PNGs (`gen_maze_001.png` ... `gen_maze_110.png`) and `maze_annotations.json` with reachability, shortest path length, and accepted paths.
+
+## Maze Generation
+
+### Single mazes
+
+Generate example mazes with sprite rendering:
+
+```bash
+python3 -m scripts.maze_generator
+```
+
+Outputs maze PNGs and a `maze_annotations.json` to `generated_mazes/`.
+
 ## Outputs
 
-Every run writes a timestamped directory under `benchmark/outputs/` with:
+Every benchmark run writes a timestamped directory under `benchmark/outputs/` with:
 
 - `raw_text/`: raw model text per maze
 - `raw_payload/`: request and response snapshots with image payloads redacted
@@ -157,7 +202,7 @@ Every run writes a timestamped directory under `benchmark/outputs/` with:
 - `summary.jsonl`: JSONL version of the same rows
 - `report.md`: short run summary
 
-Generated outputs are intentionally gitignored. The repository keeps the runner and blog post, not local experiment artifacts.
+Generated outputs are intentionally gitignored.
 
 ## Prompt And Scoring
 
@@ -171,18 +216,16 @@ The scorer treats a maze as solved only when:
 - shortest-path length is correct
 - the returned path matches one accepted shortest path annotation
 
-## Blog Post
+## Citation
 
-Open `maze_benchmark_blog.html` directly in a browser, or serve the repository locally:
-
-```bash
-python3 -m http.server 8000
+```bibtex
+@article{rodriguezsalgado2026mazebench,
+  title   = {From Pixels to BFS: High Maze Accuracy Does Not Imply Visual Planning},
+  author  = {Rodriguez Salgado, Alberto},
+  journal = {arXiv preprint arXiv:2603.26839},
+  year    = {2026},
+}
 ```
-
-Then open:
-
-- `http://127.0.0.1:8000/`
-- or `http://127.0.0.1:8000/maze_benchmark_blog.html`
 
 ## Notes
 

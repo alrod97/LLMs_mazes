@@ -15,7 +15,7 @@ from benchmark.models.dashscope_adapter import DashScopeAdapter
 from benchmark.models.gemini_adapter import GeminiAdapter
 from benchmark.models.mock_adapter import MockAdapter
 from benchmark.models.openai_adapter import OpenAIAdapter
-from benchmark.prompts import BENCHMARK_PROMPT, BENCHMARK_PROMPT_NAME
+from benchmark.prompts import BENCHMARK_PROMPT, BENCHMARK_PROMPT_NAME, BENCHMARK_PROMPT_VISUAL, BENCHMARK_PROMPT_VISUAL_NAME
 from benchmark.utils.evaluation import evaluate_prediction, load_ground_truth
 from benchmark.utils.image_loader import MazeImage, load_maze_images
 from benchmark.utils.json_parser import ParsedJSONResult, parse_json_response
@@ -110,6 +110,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=2,
         help="How many times to rerun a maze/model pair when JSON parsing fails.",
     )
+    parser.add_argument(
+        "--visual-prompt",
+        action="store_true",
+        help="Use the visual-intuition prompt that forbids grid/matrix reasoning.",
+    )
     return parser
 
 
@@ -128,12 +133,19 @@ def main() -> int:
     run_name = args.run_name or default_run_name(model_specs)
     writer = RunWriter(args.output_dir, run_name)
 
+    if args.visual_prompt:
+        active_prompt = BENCHMARK_PROMPT_VISUAL
+        active_prompt_name = BENCHMARK_PROMPT_VISUAL_NAME
+    else:
+        active_prompt = BENCHMARK_PROMPT
+        active_prompt_name = BENCHMARK_PROMPT_NAME
+
     summary_rows: list[dict[str, Any]] = []
     for adapter in adapters:
         for maze in images:
             response, parsed_result, validation_result, attempts_used = generate_with_parse_retries(
                 adapter=adapter,
-                prompt_text=BENCHMARK_PROMPT,
+                prompt_text=active_prompt,
                 image_path=maze.path,
                 parse_retries=args.parse_retries,
             )
