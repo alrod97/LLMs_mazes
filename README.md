@@ -11,14 +11,14 @@
 <p align="center">
   <a href="https://arxiv.org/abs/2603.26839"><img src="https://img.shields.io/badge/arXiv-2603.26839-b31b1b.svg" alt="arXiv"></a>
   <a href="https://huggingface.co/datasets/albertoRodriguez97/MazeBench"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-MazeBench-yellow" alt="HuggingFace"></a>
-  <a href="https://alrod97.github.io/LLMs_mazes/maze_benchmark_blog.html"><img src="https://img.shields.io/badge/Blog-Post-blue" alt="Blog"></a>
+  <a href="https://albertoagentic.com/maze-benchmark.html"><img src="https://img.shields.io/badge/Blog-Post-blue" alt="Blog"></a>
 </p>
 
 This repository contains MazeBench, a benchmark and dataset for visually grounded maze reasoning with multimodal models. Each model receives only a maze image and a fixed prompt, then must decide whether the treasure is reachable and, if so, return one valid shortest path in JSON.
 
 **Paper:** [From Pixels to BFS: High Maze Accuracy Does Not Imply Visual Planning](https://arxiv.org/abs/2603.26839)
 
-**Blog post:** [maze_benchmark_blog.html](https://alrod97.github.io/LLMs_mazes/maze_benchmark_blog.html) (the original 10-maze experiment)
+**Blog post:** [maze_benchmark_blog.html](https://albertoagentic.com/maze-benchmark.html) (the original 10-maze experiment)
 
 **Dataset:** [Hugging Face Hub](https://huggingface.co/datasets/albertoRodriguez97/MazeBench)
 
