@@ -5,8 +5,10 @@
 </p>
 
 <p align="center">
-  <b>Left:</b> Mazes from MazeBench at increasing difficulty (5x5 to 20x20). <b>Right:</b> Solve rate vs. total tokens consumed across frontier models.
+  <b>Top:</b> Mazes from MazeBench at increasing difficulty (5x5 to 20x20). <b>Bottom:</b> Solve rate vs. total tokens consumed across frontier models.
 </p>
+
+> **Why does Claude cluster at the bottom?** Every model in this benchmark solves mazes with the same underlying strategy: they first translate the image into a textual grid/matrix and then search for a path in token space, step by step. The gap between providers is mostly a gap at the *first* step — visual extraction. GPT-5.4 and Gemini parse the maze into the correct text grid reliably, so their downstream token-level search pays off. Claude models (Haiku / Sonnet / Opus) frequently hallucinate the grid during extraction, and no amount of downstream reasoning can recover from a wrong grid. We confirm this in the paper's text-grid ablation: when Claude is fed the ground-truth text grid directly (bypassing vision), Sonnet 4.6 jumps from 6% to 80% solved — a 13x gain that isolates the failure to the image→text step.
 
 <p align="center">
   <a href="https://arxiv.org/abs/2603.26839"><img src="https://img.shields.io/badge/arXiv-2603.26839-b31b1b.svg" alt="arXiv"></a>
