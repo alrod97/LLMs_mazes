@@ -12,6 +12,9 @@ OUT = Path(__file__).resolve().parent
 
 # label, display, solved%, tok_K, provider, tier(1-3), reasoning
 MODELS = [
+    ("GPT-5.5 (medium)",       "GPT-5.5 (med.)",       96, 209, "OpenAI",    3, "medium"),
+    ("GPT-5.5 (low)",          "GPT-5.5 (low)",        92, 101, "OpenAI",    3, "low"),
+    ("GPT-5.5 (none)",         "GPT-5.5 (none)",       15,  10, "OpenAI",    3, "none"),
     ("GPT-5.4 (medium)",       "GPT-5.4 (med.)",       91, 265, "OpenAI",    3, "medium"),
     ("GPT-5.4 (low)",          "GPT-5.4 (low)",        85, 145, "OpenAI",    3, "low"),
     ("GPT-5.4 (none)",         "GPT-5.4 (none)",       12,   9, "OpenAI",    3, "none"),
@@ -22,6 +25,9 @@ MODELS = [
     ("Gemini 3 Flash",         "Gemini 3 Flash",       53, 804, "Google",    1, "hidden"),
     ("Qwen 3.5 Plus",          "Qwen 3.5 Plus",        11, 240, "Qwen",      2, "low"),
     ("Qwen 3.5 Flash",         "Qwen 3.5 Flash",       15, 238, "Qwen",      1, "low"),
+    ("Opus 4.8 (low)",         "Opus 4.8 (low)",       44, 499, "Anthropic", 3, "low"),
+    ("Opus 4.7 (low)",         "Opus 4.7 (low)",       31, 409, "Anthropic", 3, "low"),
+    ("Opus 4.7 (medium)",      "Opus 4.7 (med.)",      29, 500, "Anthropic", 3, "medium"),
     ("Opus 4.6 (low)",         None,                    4, 114, "Anthropic", 3, "low"),
     ("Opus 4.6 (none)",        None,                    4,  91, "Anthropic", 3, "none"),
     ("Sonnet 4.6 (none)",      None,                    6,  86, "Anthropic", 2, "none"),
@@ -41,6 +47,9 @@ TIER_SIZE = {1: 70, 2: 170, 3: 350}
 
 # (dx in log10, dy, ha, va) — carefully tuned to avoid ALL overlaps
 LABEL_POS = {
+    "GPT-5.5 (medium)":       (-0.18,   2, "right", "bottom"),
+    "GPT-5.5 (low)":          (-0.24,  -2, "right", "top"),
+    "GPT-5.5 (none)":         ( 0.02,   6, "center", "bottom"),
     "GPT-5.4 (medium)":       ( 0.12,   3, "left",  "bottom"),
     "GPT-5.4 (low)":          (-0.35,   0, "right", "center"),
     "GPT-5.4 (none)":         ( 0.15,   4, "left",  "bottom"),
@@ -51,6 +60,9 @@ LABEL_POS = {
     "Gemini 3 Flash":         (-0.30,   4, "right", "bottom"),
     "Qwen 3.5 Flash":         ( 0.10,   3, "left",  "bottom"),
     "Qwen 3.5 Plus":          ( 0.10,  -5, "left",  "top"),
+    "Opus 4.8 (low)":         (-0.18,  -4, "right", "top"),
+    "Opus 4.7 (low)":         (-0.30,   4, "right", "bottom"),
+    "Opus 4.7 (medium)":      ( 0.10,  -5, "left",  "top"),
 }
 
 
@@ -83,7 +95,7 @@ def build():
 
     # ── Failure zone — very subtle ──
     ax.axhspan(-5, 18, color="#fee2e2", alpha=0.22, zorder=1)
-    ax.text(7, 15.5, "no-reasoning failure zone",
+    ax.text(34, 15.5, "no-reasoning failure zone",
             fontsize=6.5, color="#b91c1c", alpha=0.45,
             fontstyle="italic", path_effects=txt_fx)
 
@@ -120,8 +132,8 @@ def build():
                             lw=0.4, shrinkA=3, shrinkB=1),
         )
 
-    # ── Claude cluster label — simple text above the red dots ──
-    ax.text(82, 9, "Claude (Haiku / Sonnet / Opus)",
+    # ── Claude 4.6-era cluster label — simple text above the red dots ──
+    ax.text(82, 9, "Claude 4.6-era (Haiku 4.5 / Sonnet 4.6 / Opus 4.6)",
             fontsize=7, color="#b91c1c", fontstyle="italic",
             ha="center", va="bottom", path_effects=txt_fx, zorder=6)
 

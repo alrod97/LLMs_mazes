@@ -16,6 +16,12 @@
   <a href="https://albertoagentic.com/maze-benchmark.html"><img src="https://img.shields.io/badge/Blog-Post-blue" alt="Blog"></a>
 </p>
 
+## Latest News
+
+- `2026-06-01`: `Claude Opus 4.8` results added. On the 100-maze core set it scores `44/100` at `low` thinking, with `73%` reachability accuracy, `499K` total tokens, and `11,350` tokens per solve. On the 10 ultra-hard mazes it scores `2/10`. The token-efficiency plot above has been refreshed with this run.
+- `2026-04-25`: `GPT-5.5` results added. On the 100-maze core set it scores `15/100` (`none`), `92/100` (`low`), and `96/100` (`medium`). On the 10 ultra-hard mazes it scores `0/10` (`none`) and `4/10` (`medium`).
+- `2026-04-24`: `Claude Opus 4.7` results added. On the 100-maze core set it scores `31/100` (`low`) and `29/100` (`medium`). In the text-grid ablation reported in the paper, `Opus 4.7` reaches `90/100`.
+
 This repository contains MazeBench, a benchmark and dataset for visually grounded maze reasoning with multimodal models. Each model receives only a maze image and a fixed prompt, then must decide whether the treasure is reachable and, if so, return one valid shortest path in JSON.
 
 **Paper:** [From Pixels to BFS: High Maze Accuracy Does Not Imply Visual Planning](https://arxiv.org/abs/2603.26839)

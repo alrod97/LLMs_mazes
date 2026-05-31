@@ -88,6 +88,9 @@ def build_maze_grid():
 
 MODELS = [
     # label,             display_name,         solved%, tok_K, provider,   reasoning
+    ("GPT-5.5 (medium)", "GPT-5.5 (med.)",     96, 209,  "OpenAI",    "medium"),
+    ("GPT-5.5 (low)",    "GPT-5.5 (low)",      92, 101,  "OpenAI",    "low"),
+    ("GPT-5.5 (none)",   "GPT-5.5 (none)",     15,  10,  "OpenAI",    "none"),
     ("GPT-5.4 (medium)", "GPT-5.4",            91, 265,  "OpenAI",    "medium"),
     ("GPT-5.4 (low)",    "GPT-5.4",            85, 145,  "OpenAI",    "low"),
     ("GPT-5.4 (none)",   "GPT-5.4",            12,   9,  "OpenAI",    "none"),
@@ -95,6 +98,9 @@ MODELS = [
     ("Gemini 3 Flash",   "Gemini 3 Flash",     53, 804,  "Google",    "hidden"),
     ("Qwen 3.5 Flash",   "Qwen 3.5 Flash",    15, 238,  "Qwen",      "low"),
     ("Qwen 3.5 Plus",    "Qwen 3.5 Plus",     11, 240,  "Qwen",      "low"),
+    ("Opus 4.8 (low)",   "Opus 4.8",          44, 499,  "Anthropic", "low"),
+    ("Opus 4.7 (low)",   "Opus 4.7",          31, 409,  "Anthropic", "low"),
+    ("Opus 4.7 (medium)","Opus 4.7",          29, 500,  "Anthropic", "medium"),
     ("Sonnet 4.6 (none)","Sonnet 4.6",          6,  86,  "Anthropic", "none"),
     ("Opus 4.6 (low)",   "Opus 4.6",            4, 114,  "Anthropic", "low"),
     ("Opus 4.6 (none)",  "Opus 4.6",            4,  91,  "Anthropic", "none"),
@@ -120,6 +126,9 @@ REASON_SIZE = {
 # Manual label offsets  (x_mult, y_offset)
 # x_mult multiplies the x coordinate (log space), y_offset adds to y
 LABEL_OFFSETS = {
+    "GPT-5.5 (medium)": (-0.18, 2),
+    "GPT-5.5 (low)":    (-0.24, -2),
+    "GPT-5.5 (none)":   (0.02, 6),
     "GPT-5.4 (medium)": (-0.42, 2),
     "GPT-5.4 (low)":    (-0.35, -6),
     "GPT-5.4 (none)":   (0.2, -7),
@@ -215,7 +224,7 @@ def build_scatter():
     claude_x = [m[3] for m in MODELS if m[4] == "Anthropic"]
     claude_y = [m[2] for m in MODELS if m[4] == "Anthropic"]
     cx, cy = np.mean(claude_x), np.mean(claude_y)
-    ax.annotate("Claude family\n(Opus, Sonnet, Haiku)\n2–6% regardless\nof config",
+    ax.annotate("Claude family\n4.6-era: 2–6%\nOpus 4.7/4.8 improves,\nstill far from GPT-5.5",
                 xy=(cx, cy),
                 xytext=(20, 32),
                 fontsize=7, color="#b91c1c",
