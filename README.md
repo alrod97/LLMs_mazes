@@ -1,7 +1,7 @@
 # MazeBench: Visual Maze Reasoning for Multimodal LLMs
 
 <p align="center">
-  <img src="paper/fig_hero.png" alt="MazeBench: maze examples at increasing difficulty (left) and token efficiency scatter across frontier models (right)" width="100%">
+  <img src="paper/fig_hero_opus48.png" alt="MazeBench: maze examples at increasing difficulty (left) and token efficiency scatter across frontier models (right)" width="100%">
 </p>
 
 <p align="center">
